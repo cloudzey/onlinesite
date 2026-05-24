@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_constants.dart'; // Havuzu import ettik
+import '../../core/constants/app_constants.dart';
 import '../../core/models/product_model.dart';
 
 class HomeView extends StatefulWidget {
@@ -10,35 +10,38 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  // Kullanıcının o an seçtiği kategoriyi hafızada tutuyoruz (Varsayılan: Tümü)
   String seciliKategori = 'Tümü';
-
-  // Kategorilerin tam listesi (Görseldeki butonlarla birebir uyumlu)
   final List<String> kategoriler = ['Tümü', 'Elektronik', 'Giyim'];
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
+    
+    // 1. DİNAMİK SÜTUN VE ORAN HESABI (Taşmayı Önleyen Sihirli Kısım)
     int crossAxisCount = screenWidth > 600 ? 4 : 2;
+    // Ekran çok daraldığında kartların dikeyde taşmasını önlemek için oranı esnetiyoruz
+    double cardAspectRatio = screenWidth < 360 ? 0.62 : 0.70;
 
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.all(16.0), // Teke düşürüldü, hata çözüldü!
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0), // Padding dengelendi
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ÜST BAŞLIK ALANI
+                // ÜST BAŞLIK ALANI (Yatay taşmayı önlemek için Flexible eklendi)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // spaceBetween olarak düzeltildi!
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Merhaba, Keyifli Alışverişler! 👋',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Expanded( // Yazının sağa taşmasını önler, sığmazsa alt satıra geçirir
+                      child: const Text(
+                        'Merhaba, Keyifli Alışverişler! 👋',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        maxLines: 2,
+                      ),
                     ),
-                    // Şık ve küçük Admin Butonu
                     IconButton(
                       onPressed: () => Navigator.pushNamed(context, '/admin'),
                       icon: const Icon(Icons.admin_panel_settings, color: Colors.amber, size: 28),
@@ -60,11 +63,10 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 const SizedBox(height: 25),
 
-                // KATEGORİLER BAŞLIĞI
                 const Text('Kategoriler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
 
-                // 1. DİNAMİK KATEGORİ LİSTESİ
+                // KATEGORİ LİSTESİ
                 SizedBox(
                   height: 40,
                   child: ListView.builder(
@@ -78,7 +80,7 @@ class _HomeViewState extends State<HomeView> {
                       return GestureDetector(
                         onTap: () {
                           setState(() {
-                            seciliKategori = kategoriAdi; // Kategoriyi değiştir ve ekranı tetikle!
+                            seciliKategori = kategoriAdi;
                           });
                         },
                         child: Container(
@@ -107,12 +109,10 @@ class _HomeViewState extends State<HomeView> {
                 const Text('Günün Fırsatları', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 15),
 
-                // 2. FİLTRELENEN DİNAMİK VİTRİN
+                // DİNAMİK VİTRİN
                 ValueListenableBuilder<List<ProductModel>>(
-                  valueListenable: AppConstants.productsNotifier, // Havuzu dinle
+                  valueListenable: AppConstants.productsNotifier,
                   builder: (context, currentProducts, child) {
-                    
-                    // Seçilen kategoriye göre listedeki elemanları süzüyoruz
                     final filtrelenmisUrunler = seciliKategori == 'Tümü'
                         ? currentProducts
                         : currentProducts.where((urun) => urun.category == seciliKategori).toList();
@@ -122,7 +122,7 @@ class _HomeViewState extends State<HomeView> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 40.0),
                           child: Text(
-                            '$seciliKategori kategorisinde henüz ürün yok.',
+                            '$seciliKategori kategorisinde ürün yok.',
                             style: const TextStyle(color: Colors.grey, fontSize: 16),
                           ),
                         ),
@@ -135,9 +135,9 @@ class _HomeViewState extends State<HomeView> {
                       itemCount: filtrelenmisUrunler.length,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.70,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 10,
+                        childAspectRatio: cardAspectRatio, // Dinamik oran buraya bağlandı!
                       ),
                       itemBuilder: (context, index) {
                         return _buildProductCard(context, filtrelenmisUrunler[index]);
@@ -153,23 +153,14 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // ÜRÜN KART TASARIMI (Eski tasarımın birebir aynısı, yeni renk standartlarına uyarlandı)
   Widget _buildProductCard(BuildContext context, ProductModel product) {
     return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          '/product_detail',
-          arguments: product,
-        );
-      },
+      onTap: () => Navigator.pushNamed(context, '/product_detail', arguments: product),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2)),
-          ],
+          border: Border.all(color: Colors.grey[200]!),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,15 +180,13 @@ class _HomeViewState extends State<HomeView> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(6.0), // Padding biraz küçültüldü
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.productName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Text('${product.price.toStringAsFixed(0)} TL', style: const TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 4),
-                  Align(alignment: Alignment.bottomRight, child: Icon(Icons.favorite_border, size: 20, color: Colors.grey[600])),
+                  Text(product.productName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text('${product.price.toStringAsFixed(0)} TL', style: const TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold, fontSize: 14)),
                 ],
               ),
             ),
