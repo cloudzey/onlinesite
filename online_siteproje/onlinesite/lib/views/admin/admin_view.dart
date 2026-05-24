@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/models/product_model.dart';
+import '../../core/constants/app_constants.dart';
 
 class AdminView extends StatefulWidget {
   const AdminView({super.key});
@@ -119,37 +121,44 @@ class _AdminViewState extends State<AdminView> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Kutuların içine yazılan metinleri .text ile çekiyoruz
                       String urunAdi = _nameController.text;
                       String urunFiyati = _priceController.text;
+                      String urunKategori = _categoryController.text;
+                      String urunResim = _imageController.text;
+                      String urunAciklama = _descriptionController.text;
 
-                      // Boş bırakılmasın kontrolü (Basit Validasyon)
                       if (urunAdi.isEmpty || urunFiyati.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Lütfen ürün adı ve fiyatı alanlarını doldurun!'),
-                            backgroundColor: Colors.red,
-                          ),
+                          const SnackBar(content: Text('Lütfen ürün adı ve fiyatı alanlarını doldurun!'), backgroundColor: Colors.red),
                         );
                         return;
                       }
 
-                      // Backend entegrasyonu simülasyonu (Verileri yakaladığımızı kanıtlıyoruz)
-                      print('--- BACKEND\'E GİDECEK VERİ PAKETİ ---');
-                      print('Ürün Adı: $urunAdi');
-                      print('Fiyat: $urunFiyati TL');
-                      print('Kategori: ${_categoryController.text}');
-                      print('Resim: ${_imageController.text}');
-                      print('Açıklama: ${_descriptionController.text}');
+                      // 1. ER DİYAGRAMINA UYUMLU YENİ ÜRÜN NESNESİNİ OLUŞTURUYORUZ
+                      final yeniUrun = ProductModel(
+                        productId: DateTime.now().millisecondsSinceEpoch, // Benzersiz random ID üretir
+                        productName: urunAdi,
+                        price: double.tryParse(urunFiyati) ?? 0.0,
+                        stock: 10, // Varsayılan stok
+                        imageUrl: urunResim.isEmpty ? 'https://via.placeholder.com/150' : urunResim, // Boşsa şablon resim
+                        description: urunAciklama,
+                      );
+
+                      // 2. GLOBAL HAVUZDAKİ LİSTEYİ GÜNCELLİYORUZ
+                      // Mevcut listeyi kopyalayıp içine yeni ürünü ekliyoruz ve notifier'ı tetikliyoruz
+                      AppConstants.productsNotifier.value = [
+                        ...AppConstants.productsNotifier.value,
+                        yeniUrun
+                      ];
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('$urunAdi başarıyla mağazaya eklendi! (Konsolu kontrol et)'),
+                          content: Text('$urunAdi başarıyla mağazaya eklendi ve vitrine kondu! 🚀'),
                           backgroundColor: Colors.green,
                         ),
                       );
 
-                      // Ekleme işleminden sonra kutuları otomatik temizle
+                      // Kutuları temizle
                       _nameController.clear();
                       _priceController.clear();
                       _categoryController.clear();
