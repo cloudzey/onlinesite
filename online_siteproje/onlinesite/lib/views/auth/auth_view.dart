@@ -34,7 +34,7 @@ class _AuthViewState extends State<AuthView> {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      'KAMPÜS ÇARŞI',
+                      'TUTTUFRUTTİ',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.deepPurple),
                     ),

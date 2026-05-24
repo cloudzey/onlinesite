@@ -2,8 +2,19 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_constants.dart'; // Havuzu import ettik
 import '../../core/models/product_model.dart';
 
-class HomeView extends StatelessWidget {
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  // Kullanıcının o an seçtiği kategoriyi hafızada tutuyoruz (Varsayılan: Tümü)
+  String seciliKategori = 'Tümü';
+
+  // Kategorilerin tam listesi (Görseldeki butonlarla birebir uyumlu)
+  final List<String> kategoriler = ['Tümü', 'Elektronik', 'Giyim'];
 
   @override
   Widget build(BuildContext context) {
@@ -15,24 +26,29 @@ class HomeView extends StatelessWidget {
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0), // Teke düşürüldü, hata çözüldü!
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Merhaba, Keyifli Alışverişler! 👋',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                // ÜST BAŞLIK ALANI
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween, // spaceBetween olarak düzeltildi!
+                  children: [
+                    const Text(
+                      'Merhaba, Keyifli Alışverişler! 👋',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    // Şık ve küçük Admin Butonu
+                    IconButton(
+                      onPressed: () => Navigator.pushNamed(context, '/admin'),
+                      icon: const Icon(Icons.admin_panel_settings, color: Colors.amber, size: 28),
+                      tooltip: 'Admin Paneli',
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 15),
 
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pushNamed(context, '/admin'),
-                  icon: const Icon(Icons.admin_panel_settings),
-                  label: const Text('Admin Paneline Git (Test)'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[100], foregroundColor: Colors.amber[900]),
-                ),
-                const SizedBox(height: 15),
-
+                // ARAMA ÇUBUĞU
                 TextField(
                   decoration: InputDecoration(
                     hintText: 'Ürün, kategori veya marka ara...',
@@ -44,17 +60,46 @@ class HomeView extends StatelessWidget {
                 ),
                 const SizedBox(height: 25),
 
+                // KATEGORİLER BAŞLIĞI
                 const Text('Kategoriler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 10),
+
+                // 1. DİNAMİK KATEGORİ LİSTESİ
                 SizedBox(
                   height: 40,
-                  child: ListView(
+                  child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    children: [
-                      _buildCategoryChip('Tümü', true),
-                      _buildCategoryChip('Elektronik', false),
-                      _buildCategoryChip('Giyim', false),
-                    ],
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: kategoriler.length,
+                    itemBuilder: (context, index) {
+                      final kategoriAdi = kategoriler[index];
+                      final bool isSelected = seciliKategori == kategoriAdi;
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            seciliKategori = kategoriAdi; // Kategoriyi değiştir ve ekranı tetikle!
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 10),
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.deepPurple : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                            child: Text(
+                              kategoriAdi,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.black87,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(height: 25),
@@ -62,19 +107,32 @@ class HomeView extends StatelessWidget {
                 const Text('Günün Fırsatları', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 15),
 
-                // SİHİRLİ DOKUNUŞ: Havuzu dinleyen dinamik dinleyici
+                // 2. FİLTRELENEN DİNAMİK VİTRİN
                 ValueListenableBuilder<List<ProductModel>>(
-                  valueListenable: AppConstants.productsNotifier, // Bu havuzu dinle
+                  valueListenable: AppConstants.productsNotifier, // Havuzu dinle
                   builder: (context, currentProducts, child) {
-                    // Havuzda ürün yoksa boş uyarısı göster
-                    if (currentProducts.isEmpty) {
-                      return const Center(child: Text('Mağazada henüz ürün yok.'));
+                    
+                    // Seçilen kategoriye göre listedeki elemanları süzüyoruz
+                    final filtrelenmisUrunler = seciliKategori == 'Tümü'
+                        ? currentProducts
+                        : currentProducts.where((urun) => urun.category == seciliKategori).toList();
+
+                    if (filtrelenmisUrunler.isEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40.0),
+                          child: Text(
+                            '$seciliKategori kategorisinde henüz ürün yok.',
+                            style: const TextStyle(color: Colors.grey, fontSize: 16),
+                          ),
+                        ),
+                      );
                     }
 
                     return GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: currentProducts.length, // Dinamik sayı
+                      itemCount: filtrelenmisUrunler.length,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
                         crossAxisSpacing: 12,
@@ -82,7 +140,7 @@ class HomeView extends StatelessWidget {
                         childAspectRatio: 0.70,
                       ),
                       itemBuilder: (context, index) {
-                        return _buildProductCard(context, currentProducts[index]);
+                        return _buildProductCard(context, filtrelenmisUrunler[index]);
                       },
                     );
                   },
@@ -95,25 +153,13 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryChip(String label, bool isSelected) {
-    return Container(
-      margin: const EdgeInsets.only(right: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.deepPurple : Colors.grey[200],
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Center(child: Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontWeight: FontWeight.bold))),
-    );
-  }
-
+  // ÜRÜN KART TASARIMI (Eski tasarımın birebir aynısı, yeni renk standartlarına uyarlandı)
   Widget _buildProductCard(BuildContext context, ProductModel product) {
     return GestureDetector(
       onTap: () {
-        // Tıklanan ürün nesnesini (product) argüman olarak detay sayfasına uçuruyoruz
         Navigator.pushNamed(
-          context, 
-          '/product_detail', 
+          context,
+          '/product_detail',
           arguments: product,
         );
       },
@@ -122,7 +168,7 @@ class HomeView extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 5, offset: const Offset(0, 2)),
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../core/models/product_model.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/models/product_model.dart';
 
 class AdminView extends StatefulWidget {
   const AdminView({super.key});
@@ -10,21 +10,21 @@ class AdminView extends StatefulWidget {
 }
 
 class _AdminViewState extends State<AdminView> {
-  // 1. KUTULARDAKİ VERİLERİ YAKALAYACAK KUMANDALAR (CONTROLLER)
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _imageController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  // Kontrolcüleri (Form verilerini okumak için) burada tanımlıyoruz
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  final TextEditingController stockController = TextEditingController();
+  final TextEditingController imageController = TextEditingController();
+  final TextEditingController categoryController = TextEditingController();
 
-  // Bellek sızıntısını (Memory Leak) önlemek için kumandaları işi bitince kapatıyoruz
   @override
   void dispose() {
-    _nameController.dispose();
-    _priceController.dispose();
-    _categoryController.dispose();
-    _imageController.dispose();
-    _descriptionController.dispose();
+    // Hafıza sızıntısını önlemek için temizliyoruz
+    nameController.dispose();
+    priceController.dispose();
+    stockController.dispose();
+    imageController.dispose();
+    categoryController.dispose();
     super.dispose();
   }
 
@@ -35,154 +35,108 @@ class _AdminViewState extends State<AdminView> {
         title: const Text('Mağaza Yönetim Paneli'),
         backgroundColor: Colors.amber[700],
         foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Yeni Ürün Ekleme Formu',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const Text(
-                  'Buraya girdiğiniz ürünler backend tetiklendiğinde SQL veritabanına yazılacaktır.',
-                  style: TextStyle(fontSize: 13, color: Colors.grey),
-                ),
-                const SizedBox(height: 25),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Yeni Ürün Ekleme Formu',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
 
-                // 2. KUTULARA KUMANDALARI (CONTROLLER) BAĞLIYORUZ
-                TextField(
-                  controller: _nameController, // Bağlantı kuruldu
-                  decoration: InputDecoration(
-                    labelText: 'Ürün Adı',
-                    hintText: 'Örn: iPhone 15 Pro Max',
-                    prefixIcon: const Icon(Icons.shopping_bag),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 16),
+              // Girdi Alanları
+              _buildTextField(nameController, 'Ürün Adı', Icons.shopping_bag),
+              _buildTextField(priceController, 'Fiyat (TL)', Icons.attach_money, isNumber: true),
+              _buildTextField(stockController, 'Stok Adedi', Icons.analytics, isNumber: true),
+              _buildTextField(categoryController, 'Kategori (Örn: Elektronik, Moda, Kozmetik)', Icons.category),
+              _buildTextField(imageController, 'Resim URL Adresi', Icons.link),
 
-                TextField(
-                  controller: _priceController, //鍵Bağlantı kuruldu
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Ürün Fiyatı (TL)',
-                    hintText: 'Örn: 75000',
-                    prefixIcon: const Icon(Icons.attach_money),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 16),
+              const SizedBox(height: 30),
 
-                TextField(
-                  controller: _categoryController, // Bağlantı kuruldu
-                  decoration: InputDecoration(
-                    labelText: 'Kategori',
-                    hintText: 'Örn: Elektronik, Giyim...',
-                    prefixIcon: const Icon(Icons.category),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: _imageController, // Bağlantı kuruldu
-                  decoration: InputDecoration(
-                    labelText: 'Ürün Resim Linki (URL)',
-                    hintText: 'https://example.com/resim.png',
-                    prefixIcon: const Icon(Icons.link),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                TextField(
-                  controller: _descriptionController, // Bağlantı kuruldu
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    labelText: 'Ürün Açıklaması',
-                    hintText: 'Ürünün özelliklerini yazınız...',
-                    alignLabelWithHint: true,
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-                const SizedBox(height: 30),
-
-                // 3. BUTONA BASILDIĞINDA VERİLERİ KONSOLA YAZDIRMA TESTİ
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      String urunAdi = _nameController.text;
-                      String urunFiyati = _priceController.text;
-                      String urunKategori = _categoryController.text;
-                      String urunResim = _imageController.text;
-                      String urunAciklama = _descriptionController.text;
-
-                      if (urunAdi.isEmpty || urunFiyati.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Lütfen ürün adı ve fiyatı alanlarını doldurun!'), backgroundColor: Colors.red),
-                        );
-                        return;
-                      }
-
-                      // 1. ER DİYAGRAMINA UYUMLU YENİ ÜRÜN NESNESİNİ OLUŞTURUYORUZ
-                      final yeniUrun = ProductModel(
-                        productId: DateTime.now().millisecondsSinceEpoch, // Benzersiz random ID üretir
-                        productName: urunAdi,
-                        price: double.tryParse(urunFiyati) ?? 0.0,
-                        stock: 10, // Varsayılan stok
-                        imageUrl: urunResim.isEmpty ? 'https://via.placeholder.com/150' : urunResim, // Boşsa şablon resim
-                        description: urunAciklama,
-                      );
-
-                      // 2. GLOBAL HAVUZDAKİ LİSTEYİ GÜNCELLİYORUZ
-                      // Mevcut listeyi kopyalayıp içine yeni ürünü ekliyoruz ve notifier'ı tetikliyoruz
-                      AppConstants.productsNotifier.value = [
-                        ...AppConstants.productsNotifier.value,
-                        yeniUrun
-                      ];
-
+              // ÜRÜN EKLEME BUTONU
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Validasyon (Boş bırakmama kontrolü)
+                    if (nameController.text.isEmpty || priceController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('$urunAdi başarıyla mağazaya eklendi ve vitrine kondu! 🚀'),
-                          backgroundColor: Colors.green,
-                        ),
+                        const SnackBar(content: Text('Lütfen en azından ürün adı ve fiyatı alanlarını doldurun!')),
                       );
+                      return;
+                    }
 
-                      // Kutuları temizle
-                      _nameController.clear();
-                      _priceController.clear();
-                      _categoryController.clear();
-                      _imageController.clear();
-                      _descriptionController.clear();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber[700],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.add_circle_outline),
-                        SizedBox(width: 8),
-                        Text('Ürünü Mağazaya Yükle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                    // 1. Yeni Ürün Nesnesini Oluşturuyoruz
+                    final yeniUrun = ProductModel(
+                      productId: DateTime.now().millisecondsSinceEpoch, // Benzersiz ID
+                      productName: nameController.text,
+                      price: double.tryParse(priceController.text) ?? 0.0,
+                      stock: int.tryParse(stockController.text) ?? 0,
+                      imageUrl: imageController.text.isEmpty
+                          ? 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=500' // Varsayılan görsel
+                          : imageController.text,
+                      description: 'Admin tarafından eklenen harika bir ürün.',
+                      category: categoryController.text.isEmpty ? 'Genel' : categoryController.text,
+                    );
+
+                    // 2. Küresel Listeye (Notifier) Yeni Ürünü Ekliyoruz
+                    AppConstants.productsNotifier.value = [
+                      yeniUrun,
+                      ...AppConstants.productsNotifier.value,
+                    ];
+
+                    // 3. Formu Temizle ve Başarı Mesajı Göster
+                    nameController.clear();
+                    priceController.clear();
+                    stockController.clear();
+                    imageController.clear();
+                    categoryController.clear();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Ürün başarıyla mağaza vitrinine eklendi!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+
+                    // Ürün eklendikten sonra ana sayfaya geri dön
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[700],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
+                  child: const Text('Ürünü Mağazaya Yükle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Yardımcı Metot: Şık Tasarımlı Input Alanı
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool isNumber = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: Colors.amber[700]),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.amber[700]!, width: 2),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),

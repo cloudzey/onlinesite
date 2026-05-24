@@ -1,10 +1,11 @@
 class ProductModel {
-  final int productId; // Diyagrama göre product_id
-  final String productName; // Diyagrama göre product_name
+  final int productId;
+  final String productName;
   final double price;
-  final int stock; // Yeni eklenen stock alanı
-  final String imageUrl; // Diyagrama göre image_url
+  final int stock;
+  final String imageUrl;
   final String description;
+  final String category; // Yeni eklediğimiz kategori alanı
 
   ProductModel({
     required this.productId,
@@ -13,6 +14,7 @@ class ProductModel {
     required this.stock,
     required this.imageUrl,
     required this.description,
+    required this.category,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class ProductModel {
       stock: json['stock'] ?? 0,
       imageUrl: json['image_url'] ?? '',
       description: json['description'] ?? '',
+      category: json['category'] ?? 'Genel',
     );
   }
 
@@ -34,6 +37,7 @@ class ProductModel {
       'stock': stock,
       'image_url': imageUrl,
       'description': description,
+      'category': category,
     };
   }
 }
