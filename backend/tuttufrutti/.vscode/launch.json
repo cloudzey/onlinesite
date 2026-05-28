@@ -1,0 +1,28 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "onlinesite",
+            "cwd": "online_siteproje\\onlinesite",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "onlinesite (profile mode)",
+            "cwd": "online_siteproje\\onlinesite",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "onlinesite (release mode)",
+            "cwd": "online_siteproje\\onlinesite",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
