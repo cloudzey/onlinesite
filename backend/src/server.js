@@ -1,9 +1,12 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 
 const pool = require("./config/db");
 const productRoutes = require("./routes/productRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
@@ -23,6 +26,7 @@ app.use(express.json());
 
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.send("E-commerce backend çalışıyor.");
