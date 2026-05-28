@@ -31,10 +31,19 @@ class _AdminViewState extends State<AdminView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+     appBar: AppBar(
         title: const Text('Mağaza Yönetim Paneli'),
         backgroundColor: Colors.amber[700],
         foregroundColor: Colors.white,
+        actions: [
+          // Admin Shop sayfasına gitme butonu
+          TextButton.icon(
+            onPressed: () => Navigator.pushNamed(context, '/admin_shop'),
+            icon: const Icon(Icons.storefront, color: Colors.white),
+            label: const Text('Ürünleri Yönet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 10),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

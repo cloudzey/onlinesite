@@ -6,7 +6,8 @@ import 'views/product_detail/productdetail_view.dart';
 import 'views/favorites/favorites_view.dart';
 import 'views/cartandcheckout/checkout_view.dart';   
 import 'views/admin/admin_view.dart';
-import 'views/main_wrapper/main_wrapper_view.dart'; // YENİ EKLEDİĞİMİZ SATIR
+import 'views/main_wrapper/main_wrapper_view.dart'; 
+import 'views/admin/admin_shop_view.dart';// YENİ EKLEDİĞİMİZ SATIR
 
 void main() {
   runApp(const MyApp());
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
         '/favorites': (context) => const FavoritesView(),
         '/cart': (context) => const CartView(), 
         '/admin': (context) => const AdminView(),
+        '/admin_shop': (context) => const AdminShopView(),
       },
     );
   }
