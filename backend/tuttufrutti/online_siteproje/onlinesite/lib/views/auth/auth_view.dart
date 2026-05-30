@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/services/api_service.dart';
 
 class AuthView extends StatefulWidget {
   const AuthView({super.key});
@@ -8,8 +9,90 @@ class AuthView extends StatefulWidget {
 }
 
 class _AuthViewState extends State<AuthView> {
-  // Giriş Yap ekranı mı yoksa Kayıt Ol ekranı mı aktif, onu tutuyoruz
   bool isLoginView = true;
+  bool isLoading = false;
+
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController surnameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    surnameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  Future<void> handleAuth() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      showMessage('E-posta ve şifre boş bırakılamaz.');
+      return;
+    }
+
+    if (!isLoginView) {
+      final name = nameController.text.trim();
+      final surname = surnameController.text.trim();
+
+      if (name.isEmpty || surname.isEmpty) {
+        showMessage('Ad ve soyad boş bırakılamaz.');
+        return;
+      }
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      if (isLoginView) {
+        await ApiService.login(
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+
+        showMessage('Giriş başarılı.');
+
+        Navigator.pushReplacementNamed(context, '/main_wrapper');
+      } else {
+        await ApiService.register(
+          name: nameController.text.trim(),
+          surname: surnameController.text.trim(),
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+
+        showMessage('Kayıt başarılı. Şimdi giriş yapabilirsin.');
+
+        setState(() {
+          isLoginView = true;
+        });
+      }
+    } catch (e) {
+      showMessage(e.toString().replaceFirst('Exception: ', ''));
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +109,6 @@ class _AuthViewState extends State<AuthView> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // 1. UYGULAMA LOGO ALANI
                     const Icon(
                       Icons.shopping_bag_outlined,
                       size: 80,
@@ -36,108 +118,174 @@ class _AuthViewState extends State<AuthView> {
                     const Text(
                       'TUTTUFRUTTİ',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.deepPurple,
+                      ),
                     ),
                     const SizedBox(height: 30),
 
-                    // 2. GİRİŞ YAP / KAYIT OL SEKME BUTONLARI
                     Row(
                       children: [
                         Expanded(
                           child: InkWell(
-                            onTap: () => setState(() => isLoginView = true),
+                            onTap: isLoading
+                                ? null
+                                : () => setState(() => isLoginView = true),
                             child: Column(
                               children: [
                                 Text(
                                   'Giriş Yap',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: isLoginView ? FontWeight.bold : FontWeight.normal,
-                                    color: isLoginView ? Colors.deepPurple : Colors.grey,
+                                    fontWeight: isLoginView
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isLoginView
+                                        ? Colors.deepPurple
+                                        : Colors.grey,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 Container(
                                   height: 2,
-                                  color: isLoginView ? Colors.deepPurple : Colors.transparent,
-                                )
+                                  color: isLoginView
+                                      ? Colors.deepPurple
+                                      : Colors.transparent,
+                                ),
                               ],
                             ),
                           ),
                         ),
                         Expanded(
                           child: InkWell(
-                            onTap: () => setState(() => isLoginView = false),
+                            onTap: isLoading
+                                ? null
+                                : () => setState(() => isLoginView = false),
                             child: Column(
                               children: [
                                 Text(
                                   'Kayıt Ol',
                                   style: TextStyle(
                                     fontSize: 16,
-                                    fontWeight: !isLoginView ? FontWeight.bold : FontWeight.normal,
-                                    color: !isLoginView ? Colors.deepPurple : Colors.grey,
+                                    fontWeight: !isLoginView
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: !isLoginView
+                                        ? Colors.deepPurple
+                                        : Colors.grey,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
                                 Container(
                                   height: 2,
-                                  color: !isLoginView ? Colors.deepPurple : Colors.transparent,
-                                )
+                                  color: !isLoginView
+                                      ? Colors.deepPurple
+                                      : Colors.transparent,
+                                ),
                               ],
                             ),
                           ),
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 30),
 
-                    // 3. E-POSTA ALANI
+                    if (!isLoginView) ...[
+                      TextField(
+                        controller: nameController,
+                        decoration: InputDecoration(
+                          labelText: 'Ad',
+                          prefixIcon: const Icon(Icons.person_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: surnameController,
+                        decoration: InputDecoration(
+                          labelText: 'Soyad',
+                          prefixIcon: const Icon(Icons.person_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
                     TextField(
+                      controller: emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: 'E-posta Adresi',
                         prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
+
                     const SizedBox(height: 16),
 
-                    // 4. ŞİFRE ALANI
                     TextField(
+                      controller: passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Şifre',
                         prefixIcon: const Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
+
                     const SizedBox(height: 12),
 
                     if (isLoginView)
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {},
-                          child: const Text('Şifremi Unuttum', style: TextStyle(color: Colors.grey)),
+                          onPressed: isLoading ? null : () {},
+                          child: const Text(
+                            'Şifremi Unuttum',
+                            style: TextStyle(color: Colors.grey),
+                          ),
                         ),
                       ),
+
                     const SizedBox(height: 20),
 
-                    // 5. ANA AKSİYON BUTONU
                     ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/main_wrapper');
-                      },
+                      onPressed: isLoading ? null : handleAuth,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.deepPurple,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: Text(
-                        isLoginView ? 'Giriş Yap' : 'Kayıt Ol',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(
+                              isLoginView ? 'Giriş Yap' : 'Kayıt Ol',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
                   ],
                 ),

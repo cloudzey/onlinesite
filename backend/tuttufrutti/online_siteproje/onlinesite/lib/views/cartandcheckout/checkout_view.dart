@@ -1,11 +1,79 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_constants.dart';
-import '../../core/models/cart_model.dart';
-import '../../core/models/order_model.dart';
-import '../orders/orders_view.dart'; // OrdersView dosyasının yolu
+import '../../core/services/api_service.dart';
+import '../orders/orders_view.dart';
 
-class CartView extends StatelessWidget {
+class CartView extends StatefulWidget {
   const CartView({super.key});
+
+  @override
+  State<CartView> createState() => _CartViewState();
+}
+
+class _CartViewState extends State<CartView> {
+  late Future<Map<String, dynamic>> cartFuture;
+  bool isCreatingOrder = false;
+
+  @override
+  void initState() {
+    super.initState();
+    cartFuture = ApiService.getCart();
+  }
+
+  void refreshCart() {
+    setState(() {
+      cartFuture = ApiService.getCart();
+    });
+  }
+
+  void showMessage(String message, {Color color = Colors.deepPurple}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+      ),
+    );
+  }
+
+  Future<void> completeOrder() async {
+    setState(() {
+      isCreatingOrder = true;
+    });
+
+    try {
+      await ApiService.createOrder();
+
+      if (!mounted) return;
+
+      showMessage('Ödeme başarılı! Siparişiniz alındı. 🎉');
+
+      refreshCart();
+    } catch (e) {
+      if (!mounted) return;
+
+      showMessage(
+        e.toString().replaceFirst('Exception: ', ''),
+        color: Colors.red,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isCreatingOrder = false;
+        });
+      }
+    }
+  }
+
+  double calculateTotal(List<dynamic> items) {
+    double total = 0;
+
+    for (final item in items) {
+      final price = double.tryParse(item['price'].toString()) ?? 0;
+      final quantity = int.tryParse(item['quantity'].toString()) ?? 0;
+      total += price * quantity;
+    }
+
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +81,11 @@ class CartView extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Sepetim & Ödeme'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Sepeti Yenile',
+            onPressed: refreshCart,
+          ),
           IconButton(
             icon: const Icon(Icons.receipt_long_outlined),
             tooltip: 'Siparişlerim',
@@ -27,27 +100,48 @@ class CartView extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: ValueListenableBuilder<List<CartItemModel>>(
-          valueListenable: AppConstants.cartNotifier,
-          builder: (context, sepetListesi, child) {
-            
-            if (sepetListesi.isEmpty) {
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: cartFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.deepPurple),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  snapshot.error.toString().replaceFirst('Exception: ', ''),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              );
+            }
+
+            final cartData = snapshot.data;
+            final List<dynamic> items = cartData?['items'] ?? [];
+
+            if (items.isEmpty) {
               return const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
+                    Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
                     SizedBox(height: 16),
-                    Text('Sepetiniz şu anda boş.', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                    Text(
+                      'Sepetiniz şu anda boş.',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
                   ],
                 ),
               );
             }
 
-            double toplamTutar = 0;
-            for (var eleman in sepetListesi) {
-              toplamTutar += (eleman.product.price * eleman.quantity);
-            }
+            final toplamTutar = calculateTotal(items);
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -58,26 +152,33 @@ class CartView extends StatelessWidget {
                   children: [
                     const Text(
                       'Sepetteki Ürünler',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 10),
-                    
+
                     ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      itemCount: sepetListesi.length,
+                      itemCount: items.length,
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: _buildCartItem(sepetListesi[index]),
+                          child: _buildCartItem(items[index]),
                         );
                       },
                     ),
+
                     const SizedBox(height: 25),
 
                     const Text(
                       'Kart Bilgileri ile Ödeme',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 15),
 
@@ -85,7 +186,9 @@ class CartView extends StatelessWidget {
                       decoration: InputDecoration(
                         labelText: 'Kart Üzerindeki İsim',
                         prefixIcon: const Icon(Icons.person),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -96,7 +199,9 @@ class CartView extends StatelessWidget {
                         labelText: 'Kart Numarası',
                         prefixIcon: const Icon(Icons.credit_card),
                         hintText: '0000 0000 0000 0000',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -109,7 +214,9 @@ class CartView extends StatelessWidget {
                             decoration: InputDecoration(
                               labelText: 'Son Kul. Tarihi',
                               hintText: 'AA/YY',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
@@ -121,12 +228,15 @@ class CartView extends StatelessWidget {
                             decoration: InputDecoration(
                               labelText: 'CVV',
                               hintText: '123',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 30),
 
                     Container(
@@ -140,10 +250,20 @@ class CartView extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('Toplam Tutar:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                              const Text(
+                                'Toplam Tutar:',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                               Text(
                                 '${toplamTutar.toStringAsFixed(0)} TL',
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.deepPurple,
+                                ),
                               ),
                             ],
                           ),
@@ -151,34 +271,30 @@ class CartView extends StatelessWidget {
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () {
-                                if (sepetListesi.isEmpty) return;
-
-                                final yeniSiparis = OrderModel(
-                                  orderId: DateTime.now().millisecondsSinceEpoch % 100000,
-                                  orderStatus: 'Hazırlanıyor',
-                                  orderDate: '23.05.2026',
-                                  totalAmount: toplamTutar,
-                                );
-
-                                AppConstants.ordersNotifier.value = [
-                                  yeniSiparis,
-                                  ...AppConstants.ordersNotifier.value
-                                ];
-
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Ödeme Başarılı! Siparişiniz Alındı. 🎉')),
-                                );
-
-                                AppConstants.cartNotifier.value = [];
-                              },
+                              onPressed: isCreatingOrder ? null : completeOrder,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.deepPurple,
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
-                              child: const Text('Ödemeyi Yap ve Siparişi Tamamla', style: TextStyle(fontWeight: FontWeight.bold)),
+                              child: isCreatingOrder
+                                  ? const SizedBox(
+                                      height: 22,
+                                      width: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Ödemeyi Yap ve Siparişi Tamamla',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                             ),
                           ),
                         ],
@@ -194,7 +310,13 @@ class CartView extends StatelessWidget {
     );
   }
 
-  Widget _buildCartItem(CartItemModel cartItem) {
+  Widget _buildCartItem(Map<String, dynamic> item) {
+    final productName = item['product_name']?.toString() ?? 'Ürün';
+    final imageUrl = item['image_url']?.toString() ?? '';
+    final quantity = item['quantity']?.toString() ?? '1';
+    final price = double.tryParse(item['price'].toString()) ?? 0;
+    final quantityNumber = int.tryParse(quantity) ?? 1;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -207,13 +329,18 @@ class CartView extends StatelessWidget {
           Container(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.network(
-                cartItem.product.imageUrl,
+                imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, color: Colors.grey),
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.image, color: Colors.grey);
+                },
               ),
             ),
           ),
@@ -222,15 +349,27 @@ class CartView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(cartItem.product.productName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  productName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('Adet: ${cartItem.quantity}', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                Text(
+                  'Adet: $quantity',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
               ],
             ),
           ),
           Text(
-            '${(cartItem.product.price * cartItem.quantity).toStringAsFixed(0)} TL',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple),
+            '${(price * quantityNumber).toStringAsFixed(0)} TL',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.deepPurple,
+            ),
           ),
         ],
       ),
