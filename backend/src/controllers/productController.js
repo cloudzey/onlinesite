@@ -99,6 +99,36 @@ const createProduct = async (req, res) => {
       shop_id,
     } = req.body;
 
+    if (!product_name || product_name.trim() === "") {
+      return res.status(400).json({
+        message: "Product name is required.",
+      });
+    }
+
+    if (price === undefined || Number(price) <= 0) {
+      return res.status(400).json({
+        message: "Price must be greater than 0.",
+      });
+    }
+
+    if (stock === undefined || Number(stock) < 0) {
+      return res.status(400).json({
+        message: "Stock cannot be negative.",
+      });
+    }
+
+    if (!category_id) {
+      return res.status(400).json({
+        message: "Category is required.",
+      });
+    }
+
+    if (!shop_id) {
+      return res.status(400).json({
+        message: "Shop is required.",
+      });
+    }
+
     const result = await pool.query(
       `
       INSERT INTO products 
@@ -106,10 +136,21 @@ const createProduct = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
       `,
-      [product_name, description, price, stock, image_url, category_id, shop_id]
+      [
+        product_name.trim(),
+        description || "Admin tarafından eklenen ürün.",
+        Number(price),
+        Number(stock),
+        image_url || "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=500",
+        Number(category_id),
+        Number(shop_id),
+      ]
     );
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({
+      message: "Product created successfully.",
+      product: result.rows[0],
+    });
   } catch (error) {
     console.error("Create product error:", error);
     res.status(500).json({

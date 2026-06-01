@@ -52,6 +52,38 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> addProduct({
+  required String productName,
+  required String description,
+  required double price,
+  required int stock,
+  required String imageUrl,
+  required int categoryId,
+  int shopId = 1,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/products'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'product_name': productName,
+      'description': description,
+      'price': price,
+      'stock': stock,
+      'image_url': imageUrl,
+      'category_id': categoryId,
+      'shop_id': shopId,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 201) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? 'Ürün eklenemedi');
+  }
+}
+
   static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -253,4 +285,55 @@ class ApiService {
       throw Exception(data['message'] ?? 'Sipariş detayı getirilemedi');
     }
   }
+
+  static Future<Map<String, dynamic>> deleteProduct({
+  required int productId,
+}) async {
+  final response = await http.delete(
+    Uri.parse('$baseUrl/api/products/$productId'),
+    headers: {'Content-Type': 'application/json'},
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? 'Ürün silinemedi');
+  }
+}
+
+static Future<Map<String, dynamic>> updateProduct({
+  required int productId,
+  required String productName,
+  required String description,
+  required double price,
+  required int stock,
+  required String imageUrl,
+  required int categoryId,
+  int shopId = 1,
+}) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/api/products/$productId'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'product_name': productName,
+      'description': description,
+      'price': price,
+      'stock': stock,
+      'image_url': imageUrl,
+      'category_id': categoryId,
+      'shop_id': shopId,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? 'Ürün güncellenemedi');
+  }
+}
+
 }
