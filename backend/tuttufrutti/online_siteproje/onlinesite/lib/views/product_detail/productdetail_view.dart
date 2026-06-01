@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/models/product_model.dart';
-import '../../core/constants/app_constants.dart';
-import '../../core/models/cart_model.dart'; // Modelimizi dahil ettik
+import '../../core/services/api_service.dart';
 
 class ProductDetailView extends StatelessWidget {
   const ProductDetailView({super.key});
@@ -90,36 +89,35 @@ class ProductDetailView extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                        // 1. Sepette bu ürün zaten var mı kontrol et
-                        final mevcutSepet = AppConstants.cartNotifier.value;
-                        int index = mevcutSepet.indexWhere((item) => item.product.productId == product.productId);
+                        
+        onPressed: () async {
+                        try {
+                          print('EKLENEN ÜRÜN ID: ${product.productId}');
+print('EKLENEN ÜRÜN ADI: ${product.productName}');
+                        await ApiService.addToCart(
+                        productId: product.productId,
+                        quantity: 1,
+                        );
 
-                        if (index != -1) {
-                          // Ürün zaten varsa adetini (quantity) 1 arttır
-                          mevcutSepet[index] = CartItemModel(
-                            cartItemId: mevcutSepet[index].cartItemId,
-                            product: mevcutSepet[index].product,
-                            quantity: mevcutSepet[index].quantity + 1,
-                          );
-                          AppConstants.cartNotifier.value = [...mevcutSepet];
-                        } else {
-                          // Ürün sepette yoksa yeni bir CartItemModel olarak ekle (ER diyagramı uyumlu)
-                          final yeniSepetElemani = CartItemModel(
-                            cartItemId: DateTime.now().millisecondsSinceEpoch, // Benzersiz cart_item_id
-                            product: product,
-                            quantity: 1,
-                          );
-                          AppConstants.cartNotifier.value = [...mevcutSepet, yeniSepetElemani];
-                        }
+                        if (!context.mounted) return;
 
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${product.productName} sepete eklendi! 🛒'),
-                            backgroundColor: Colors.deepPurple,
-                          ),
+                        SnackBar(
+                        content: Text('${product.productName} sepete eklendi! 🛒'),
+                        backgroundColor: Colors.deepPurple,
+                        ),
                         );
-                      },
+                       } catch (e) {
+                       if (!context.mounted) return;
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                        content: Text(e.toString().replaceFirst('Exception: ', '')),
+                        backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
                         icon: const Icon(Icons.shopping_cart_checkout),
                         label: const Text('Sepete Ekle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         style: ElevatedButton.styleFrom(
