@@ -18,6 +18,12 @@ final TextEditingController cardNumberController = TextEditingController();
 final TextEditingController expiryDateController = TextEditingController();
 final TextEditingController cvvController = TextEditingController();
 
+final TextEditingController addressTitleController = TextEditingController();
+final TextEditingController cityController = TextEditingController();
+final TextEditingController districtController = TextEditingController();
+final TextEditingController fullAddressController = TextEditingController();
+final TextEditingController phoneController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +36,11 @@ void dispose() {
   cardNumberController.dispose();
   expiryDateController.dispose();
   cvvController.dispose();
+  addressTitleController.dispose();
+cityController.dispose();
+districtController.dispose();
+fullAddressController.dispose();
+phoneController.dispose();
   super.dispose();
 }
 
@@ -47,6 +58,48 @@ void dispose() {
       ),
     );
   }
+
+  bool validateAddressForm() {
+  final addressTitle = addressTitleController.text.trim();
+  final city = cityController.text.trim();
+  final district = districtController.text.trim();
+  final fullAddress = fullAddressController.text.trim();
+  final phone = phoneController.text.trim();
+
+  if (addressTitle.isEmpty) {
+    showMessage('Adres başlığı boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (city.isEmpty) {
+    showMessage('Şehir boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (district.isEmpty) {
+    showMessage('İlçe boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (fullAddress.isEmpty || fullAddress.length < 10) {
+    showMessage('Açık adres en az 10 karakter olmalı.', color: Colors.red);
+    return false;
+  }
+
+  final cleanPhone = phone.replaceAll(' ', '');
+
+  if (cleanPhone.isEmpty) {
+    showMessage('Telefon numarası boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (!RegExp(r'^[0-9]{10,11}$').hasMatch(cleanPhone)) {
+    showMessage('Telefon numarası 10 veya 11 haneli olmalı.', color: Colors.red);
+    return false;
+  }
+
+  return true;
+}
 
   bool validatePaymentForm() {
   final cardName = cardNameController.text.trim();
@@ -109,7 +162,11 @@ void dispose() {
   return true;
 }
 
-  Future<void> completeOrder() async {
+ Future<void> completeOrder() async {
+  if (!validateAddressForm()) {
+    return;
+  }
+
   if (!validatePaymentForm()) {
     return;
   }
@@ -129,6 +186,12 @@ void dispose() {
       cardNumberController.clear();
       expiryDateController.clear();
       cvvController.clear();
+
+      addressTitleController.clear();
+      cityController.clear();
+      districtController.clear();
+      fullAddressController.clear();
+      phoneController.clear();
 
       refreshCart();
     } catch (e) {
@@ -256,6 +319,92 @@ void dispose() {
                     ),
 
                     const SizedBox(height: 25),
+
+                    const Text(
+  'Teslimat Adresi',
+  style: TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+  ),
+),
+const SizedBox(height: 15),
+
+TextField(
+  controller: addressTitleController,
+  decoration: InputDecoration(
+    labelText: 'Adres Başlığı',
+    hintText: 'Ev, Yurt, İş...',
+    prefixIcon: const Icon(Icons.bookmark_border),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ),
+),
+const SizedBox(height: 12),
+
+Row(
+  children: [
+    Expanded(
+      child: TextField(
+        controller: cityController,
+        decoration: InputDecoration(
+          labelText: 'Şehir',
+          prefixIcon: const Icon(Icons.location_city),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    ),
+    const SizedBox(width: 12),
+    Expanded(
+      child: TextField(
+        controller: districtController,
+        decoration: InputDecoration(
+          labelText: 'İlçe',
+          prefixIcon: const Icon(Icons.map_outlined),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 12),
+
+TextField(
+  controller: fullAddressController,
+  maxLines: 3,
+  decoration: InputDecoration(
+    labelText: 'Açık Adres',
+    hintText: 'Mahalle, sokak, bina no, daire no...',
+    prefixIcon: const Icon(Icons.home_outlined),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ),
+),
+
+const SizedBox(height: 12),
+
+TextField(
+  controller: phoneController,
+  keyboardType: TextInputType.phone,
+  maxLength: 11,
+  decoration: InputDecoration(
+    counterText: '',
+    labelText: 'Telefon Numarası',
+    hintText: '05XXXXXXXXX',
+    prefixIcon: const Icon(Icons.phone_outlined),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ),
+),
+
+const SizedBox(height: 30),
 
                     const Text(
                       'Kart Bilgileri ile Ödeme',
