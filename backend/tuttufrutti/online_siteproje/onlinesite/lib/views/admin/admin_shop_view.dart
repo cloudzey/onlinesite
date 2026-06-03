@@ -11,19 +11,22 @@ class AdminShopView extends StatefulWidget {
 
 class _AdminShopViewState extends State<AdminShopView> {
   late Future<List<ProductModel>> productsFuture;
-  bool isDeleting = false;
+late Future<Map<String, dynamic>> shopProfileFuture;
+bool isDeleting = false;
 
   @override
-  void initState() {
-    super.initState();
-    productsFuture = ApiService.getProducts();
-  }
+void initState() {
+  super.initState();
+  productsFuture = ApiService.getProductsByShop();
+  shopProfileFuture = ApiService.getShopProfile();
+}
 
   void refreshProducts() {
-    setState(() {
-      productsFuture = ApiService.getProducts();
-    });
-  }
+  setState(() {
+    productsFuture = ApiService.getProductsByShop();
+    shopProfileFuture = ApiService.getShopProfile();
+  });
+}
 
   void showMessage(String message, {Color color = Colors.deepPurple}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -112,74 +115,93 @@ class _AdminShopViewState extends State<AdminShopView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.amber[700]!, Colors.orange[600]!],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.orange.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 35,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        child: const Icon(
-                          Icons.store,
-                          size: 40,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'ShopStream Resmi Mağazası',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Satıcı ID: #KOÜ2026',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                _buildProfileBadge(
-                                  Icons.inventory,
-                                  '${tumUrunler.length} Ürün',
-                                ),
-                                const SizedBox(width: 8),
-                                _buildProfileBadge(Icons.star, '4.9 Puan'),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                FutureBuilder<Map<String, dynamic>>(
+  future: shopProfileFuture,
+  builder: (context, shopSnapshot) {
+    final shop = shopSnapshot.data;
+
+    final shopName = shop?['shop_name']?.toString() ?? 'Mağaza';
+    final shopId = shop?['shop_id']?.toString() ?? '-';
+    final description = shop?['description']?.toString() ?? 'Satıcı mağazası';
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.amber[700]!, Colors.orange[600]!],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 35,
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
+            child: const Icon(
+              Icons.store,
+              size: 40,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  shopName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Satıcı ID: #$shopId',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    _buildProfileBadge(
+                      Icons.inventory,
+                      '${tumUrunler.length} Ürün',
+                    ),
+                    const SizedBox(width: 8),
+                    _buildProfileBadge(Icons.star, '4.9 Puan'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+),
 
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

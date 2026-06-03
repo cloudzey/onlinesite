@@ -9,6 +9,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const authRoutes = require("./routes/authRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const shopAuthRoutes = require("./routes/shopAuthRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/shop-auth", shopAuthRoutes);
 
 app.get("/", (req, res) => {
   res.send("E-commerce backend çalışıyor.");

@@ -44,7 +44,7 @@ class _HomeViewState extends State<HomeView> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () => Navigator.pushNamed(context, '/admin'),
+                      onPressed: () => Navigator.pushNamed(context, '/shop_login'),
                       icon: const Icon(Icons.admin_panel_settings, color: Colors.amber, size: 28),
                       tooltip: 'Admin Paneli',
                     ),
@@ -315,6 +315,19 @@ class _HomeViewState extends State<HomeView> {
                     fontSize: 14,
                   ),
                 ),
+                const SizedBox(height: 2),
+Text(
+  product.shopName == null || product.shopName!.isEmpty
+      ? 'Mağaza: Bilinmiyor'
+      : 'Mağaza: ${product.shopName}',
+  maxLines: 1,
+  overflow: TextOverflow.ellipsis,
+  style: const TextStyle(
+    color: Colors.grey,
+    fontSize: 11,
+    fontWeight: FontWeight.w500,
+  ),
+),
               ],
             ),
           ),

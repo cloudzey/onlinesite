@@ -88,6 +88,13 @@ class _AdminViewState extends State<AdminView> {
       isLoading = true;
     });
 
+    final shopId = await ApiService.getShopId();
+
+if (shopId == null) {
+  showMessage('Mağaza oturumu bulunamadı. Lütfen mağaza girişi yapın.');
+  return;
+}
+
     try {
       await ApiService.addProduct(
         productName: name,
@@ -100,7 +107,7 @@ class _AdminViewState extends State<AdminView> {
             ? 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=500'
             : imageUrl,
         categoryId: categoryId,
-        shopId: 1,
+        shopId: shopId,
       );
 
       if (!mounted) return;

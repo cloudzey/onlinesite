@@ -2,7 +2,7 @@ const pool = require("../config/db");
 
 const getAllProducts = async (req, res) => {
   try {
-    const { categoryId, search } = req.query;
+    const { categoryId, search, shopId } = req.query;
 
     let query = `
       SELECT 
@@ -32,6 +32,11 @@ const getAllProducts = async (req, res) => {
     if (search) {
       values.push(`%${search}%`);
       query += ` AND p.product_name ILIKE $${values.length}`;
+    }
+
+    if (shopId) {
+      values.push(shopId);
+      query += ` AND p.shop_id = $${values.length}`;
     }
 
     query += ` ORDER BY p.product_id DESC`;

@@ -109,6 +109,41 @@ class ApiService {
     }
   }
 
+  static Future<void> saveShopToken(String token) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('shop_token', token);
+}
+
+static Future<String?> getShopToken() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getString('shop_token');
+}
+
+static Future<void> saveShopId(int shopId) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('shop_id', shopId);
+}
+
+static Future<int?> getShopId() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('shop_id');
+}
+
+static Future<void> clearShopSession() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.remove('shop_token');
+  await prefs.remove('shop_id');
+}
+
+static Future<Map<String, String>> shopAuthHeaders() async {
+  final token = await getShopToken();
+
+  return {
+    'Content-Type': 'application/json',
+    if (token != null) 'Authorization': 'Bearer $token',
+  };
+}
+
   static Future<Map<String, dynamic>> register({
     required String name,
     required String surname,
@@ -341,6 +376,65 @@ static Future<Map<String, dynamic>> updateProduct({
     return data;
   } else {
     throw Exception(data['message'] ?? 'Ürün güncellenemedi');
+  }
+}
+
+static Future<Map<String, dynamic>> shopLogin({
+  required String email,
+  required String password,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/shop-auth/login'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'email': email,
+      'password': password,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+  await clearShopSession();
+  await saveShopToken(data['token']);
+  await saveShopId(data['shop']['shop_id']);
+  return data;
+} else {
+  throw Exception(data['message'] ?? 'Mağaza girişi başarısız');
+}
+}
+
+static Future<Map<String, dynamic>> getShopProfile() async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/shop-auth/profile'),
+    headers: await shopAuthHeaders(),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? 'Mağaza profili getirilemedi');
+  }
+}
+
+static Future<List<ProductModel>> getProductsByShop() async {
+  final shopId = await getShopId();
+
+  if (shopId == null) {
+    throw Exception('Mağaza oturumu bulunamadı');
+  }
+
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/products?shopId=$shopId'),
+  );
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((item) => ProductModel.fromJson(item)).toList();
+  } else {
+    throw Exception('Mağaza ürünleri getirilemedi');
   }
 }
 
