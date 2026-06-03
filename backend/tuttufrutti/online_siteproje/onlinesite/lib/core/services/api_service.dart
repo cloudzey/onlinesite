@@ -404,6 +404,35 @@ static Future<Map<String, dynamic>> shopLogin({
 }
 }
 
+static Future<Map<String, dynamic>> shopRegister({
+  required String shopName,
+  required String description,
+  required String email,
+  required String password,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/shop-auth/register'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'shop_name': shopName,
+      'description': description,
+      'email': email,
+      'password': password,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 201) {
+    await clearShopSession();
+    await saveShopToken(data['token']);
+    await saveShopId(data['shop']['shop_id']);
+    return data;
+  } else {
+    throw Exception(data['message'] ?? 'Mağaza kaydı başarısız');
+  }
+}
+
 static Future<Map<String, dynamic>> getShopProfile() async {
   final response = await http.get(
     Uri.parse('$baseUrl/api/shop-auth/profile'),

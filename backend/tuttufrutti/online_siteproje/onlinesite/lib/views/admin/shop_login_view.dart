@@ -9,13 +9,18 @@ class ShopLoginView extends StatefulWidget {
 }
 
 class _ShopLoginViewState extends State<ShopLoginView> {
+  bool isLoginView = true;
+  bool isLoading = false;
+
+  final TextEditingController shopNameController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  bool isLoading = false;
-
   @override
   void dispose() {
+    shopNameController.dispose();
+    descriptionController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -30,7 +35,7 @@ class _ShopLoginViewState extends State<ShopLoginView> {
     );
   }
 
-  Future<void> loginShop() async {
+  Future<void> handleShopAuth() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
@@ -39,22 +44,52 @@ class _ShopLoginViewState extends State<ShopLoginView> {
       return;
     }
 
+    if (password.length < 6) {
+      showMessage('Şifre en az 6 karakter olmalı.');
+      return;
+    }
+
+    if (!isLoginView) {
+      if (shopNameController.text.trim().isEmpty) {
+        showMessage('Mağaza adı boş bırakılamaz.');
+        return;
+      }
+    }
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      await ApiService.shopLogin(
-        email: email,
-        password: password,
-      );
+      if (isLoginView) {
+        await ApiService.shopLogin(
+          email: email,
+          password: password,
+        );
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      showMessage(
-        'Mağaza girişi başarılı.',
-        color: Colors.green,
-      );
+        showMessage(
+          'Mağaza girişi başarılı.',
+          color: Colors.green,
+        );
+      } else {
+        await ApiService.shopRegister(
+          shopName: shopNameController.text.trim(),
+          description: descriptionController.text.trim().isEmpty
+              ? 'Yeni mağaza'
+              : descriptionController.text.trim(),
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+
+        showMessage(
+          'Mağaza kaydı başarılı.',
+          color: Colors.green,
+        );
+      }
 
       Navigator.pushReplacementNamed(context, '/admin');
     } catch (e) {
@@ -72,12 +107,37 @@ class _ShopLoginViewState extends State<ShopLoginView> {
     }
   }
 
+  Widget buildTabButton(String text, bool selected, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: isLoading ? null : onTap,
+        child: Column(
+          children: [
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                color: selected ? Colors.amber[800] : Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              height: 2,
+              color: selected ? Colors.amber[800] : Colors.transparent,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF8E1),
       appBar: AppBar(
-        title: const Text('Mağaza Girişi'),
+        title: const Text('Mağaza Paneli'),
         backgroundColor: Colors.amber[700],
         foregroundColor: Colors.white,
       ),
@@ -96,14 +156,57 @@ class _ShopLoginViewState extends State<ShopLoginView> {
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Satıcı Paneline Giriş',
+                  'Satıcı Paneli',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 28),
+
+                Row(
+                  children: [
+                    buildTabButton(
+                      'Giriş Yap',
+                      isLoginView,
+                      () => setState(() => isLoginView = true),
+                    ),
+                    buildTabButton(
+                      'Mağaza Kaydı',
+                      !isLoginView,
+                      () => setState(() => isLoginView = false),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 28),
+
+                if (!isLoginView) ...[
+                  TextField(
+                    controller: shopNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Mağaza Adı',
+                      prefixIcon: const Icon(Icons.store),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: InputDecoration(
+                      labelText: 'Mağaza Açıklaması',
+                      prefixIcon: const Icon(Icons.description),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -115,7 +218,9 @@ class _ShopLoginViewState extends State<ShopLoginView> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 16),
+
                 TextField(
                   controller: passwordController,
                   obscureText: true,
@@ -127,9 +232,11 @@ class _ShopLoginViewState extends State<ShopLoginView> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 24),
+
                 ElevatedButton(
-                  onPressed: isLoading ? null : loginShop,
+                  onPressed: isLoading ? null : handleShopAuth,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber[700],
                     foregroundColor: Colors.white,
@@ -147,19 +254,24 @@ class _ShopLoginViewState extends State<ShopLoginView> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text(
-                          'Mağaza Girişi Yap',
-                          style: TextStyle(
+                      : Text(
+                          isLoginView
+                              ? 'Mağaza Girişi Yap'
+                              : 'Mağaza Kaydı Oluştur',
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                 ),
+
                 const SizedBox(height: 16),
-                const Text(
-                  'Test hesapları:\ntech@shop.com / 123456\nstyle@shop.com / 123456',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey),
-                ),
+
+                if (isLoginView)
+                  const Text(
+                    'Test hesapları:\ntech@shop.com / 123456\nstyle@shop.com / 123456',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey),
+                  ),
               ],
             ),
           ),
