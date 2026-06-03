@@ -191,9 +191,6 @@ static Future<Map<String, String>> shopAuthHeaders() async {
     headers: await authHeaders(),
   );
 
-  print('GET CART STATUS: ${response.statusCode}');
-  print('GET CART BODY: ${response.body}');
-
   final data = jsonDecode(response.body);
 
   if (response.statusCode == 200) {
@@ -464,6 +461,39 @@ static Future<List<ProductModel>> getProductsByShop() async {
     return data.map((item) => ProductModel.fromJson(item)).toList();
   } else {
     throw Exception('Mağaza ürünleri getirilemedi');
+  }
+}
+
+static Future<void> increaseCartItem(int cartItemId) async {
+  final response = await http.patch(
+    Uri.parse('$baseUrl/api/cart/increase/$cartItemId'),
+    headers: await authHeaders(),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Ürün adedi artırılamadı.');
+  }
+}
+
+static Future<void> decreaseCartItem(int cartItemId) async {
+  final response = await http.patch(
+    Uri.parse('$baseUrl/api/cart/decrease/$cartItemId'),
+    headers: await authHeaders(),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Ürün adedi azaltılamadı.');
+  }
+}
+
+static Future<void> removeCartItem(int cartItemId) async {
+  final response = await http.delete(
+    Uri.parse('$baseUrl/api/cart/remove/$cartItemId'),
+    headers: await authHeaders(),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Ürün sepetten silinemedi.');
   }
 }
 

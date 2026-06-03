@@ -128,118 +128,123 @@ const addToCart = async (req, res) => {
   }
 };
 
-const updateCartItem = async (req, res) => {
+const increaseCartItem = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const { product_id, quantity } = req.body;
-
-    if (!product_id || quantity === undefined) {
-      return res.status(400).json({
-        message: "product_id and quantity are required.",
-      });
-    }
-
-    if (quantity <= 0) {
-      return res.status(400).json({
-        message: "Quantity must be greater than 0.",
-      });
-    }
-
-    const cart = await getOrCreateCart(userId);
+    const { cartItemId } = req.params;
 
     const result = await pool.query(
       `
-      UPDATE cart_items
-      SET quantity = $1
-      WHERE cart_id = $2 AND product_id = $3
-      RETURNING *
+      UPDATE cart_items ci
+      SET quantity = quantity + 1
+      FROM cart c
+      WHERE ci.cart_id = c.cart_id
+        AND ci.cart_item_id = $1
+        AND c.user_id = $2
+      RETURNING ci.*
       `,
-      [quantity, cart.cart_id, product_id]
+      [cartItemId, userId]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        message: "Product not found in cart.",
+        message: "Cart item not found.",
       });
     }
 
     res.status(200).json({
-      message: "Cart item updated.",
+      message: "Quantity increased.",
       item: result.rows[0],
     });
   } catch (error) {
-    console.error("Update cart error:", error);
+    console.error("Increase cart item error:", error);
 
     res.status(500).json({
-      message: "Cart item could not be updated.",
+      message: "Quantity could not be increased.",
       error: error.message,
     });
   }
 };
 
-const removeFromCart = async (req, res) => {
+const decreaseCartItem = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const { productId } = req.params;
-
-    const cart = await getOrCreateCart(userId);
+    const { cartItemId } = req.params;
 
     const result = await pool.query(
       `
-      DELETE FROM cart_items
-      WHERE cart_id = $1 AND product_id = $2
-      RETURNING *
+      UPDATE cart_items AS ci
+      SET quantity = quantity - 1
+      FROM cart AS c
+      WHERE ci.cart_id = c.cart_id
+        AND ci.cart_item_id = $1
+        AND c.user_id = $2
+        AND ci.quantity > 1
+      RETURNING ci.*
       `,
-      [cart.cart_id, productId]
+      [cartItemId, userId]
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        message: "Product not found in cart.",
+      return res.status(400).json({
+        message: "Quantity cannot be decreased below 1.",
       });
     }
 
     res.status(200).json({
-      message: "Product removed from cart.",
-      removedItem: result.rows[0],
+      message: "Quantity decreased.",
+      item: result.rows[0],
     });
   } catch (error) {
-    console.error("Remove from cart error:", error);
-
+    console.error("Decrease cart item error:", error);
     res.status(500).json({
-      message: "Product could not be removed from cart.",
+      message: "Quantity could not be decreased.",
       error: error.message,
     });
   }
 };
 
-const clearCart = async (req, res) => {
+const removeCartItem = async (req, res) => {
   try {
     const userId = req.user.user_id;
-    const cart = await getOrCreateCart(userId);
+    const { cartItemId } = req.params;
 
-    await pool.query(
-      "DELETE FROM cart_items WHERE cart_id = $1",
-      [cart.cart_id]
+    const result = await pool.query(
+      `
+      DELETE FROM cart_items ci
+      USING cart c
+      WHERE ci.cart_id = c.cart_id
+        AND ci.cart_item_id = $1
+        AND c.user_id = $2
+      RETURNING ci.*
+      `,
+      [cartItemId, userId]
     );
 
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Cart item not found.",
+      });
+    }
+
     res.status(200).json({
-      message: "Cart cleared successfully.",
+      message: "Item removed from cart.",
+      removedItem: result.rows[0],
     });
   } catch (error) {
-    console.error("Clear cart error:", error);
+    console.error("Remove cart item error:", error);
 
     res.status(500).json({
-      message: "Cart could not be cleared.",
+      message: "Item could not be removed.",
       error: error.message,
     });
   }
 };
 
 module.exports = {
-  getCart,
   addToCart,
-  updateCartItem,
-  removeFromCart,
-  clearCart,
+  getCart,
+  increaseCartItem,
+  decreaseCartItem,
+  removeCartItem,
 };

@@ -554,68 +554,104 @@ const SizedBox(height: 30),
   }
 
   Widget _buildCartItem(Map<String, dynamic> item) {
-    final productName = item['product_name']?.toString() ?? 'Ürün';
-    final imageUrl = item['image_url']?.toString() ?? '';
-    final quantity = item['quantity']?.toString() ?? '1';
-    final price = double.tryParse(item['price'].toString()) ?? 0;
-    final quantityNumber = int.tryParse(quantity) ?? 1;
+  final productName = item['product_name']?.toString() ?? 'Ürün';
+  final imageUrl = item['image_url']?.toString() ?? '';
+  final quantity = item['quantity']?.toString() ?? '1';
+  final price = double.tryParse(item['price'].toString()) ?? 0;
+  final quantityNumber = int.tryParse(quantity) ?? 1;
+  final cartItemId = int.tryParse(item['cart_item_id'].toString()) ?? 0;
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: Colors.grey[200]!),
+    ),
+    child: Row(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return const Icon(Icons.image, color: Colors.grey);
+              },
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.image, color: Colors.grey);
-                },
+          ),
+        ),
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                productName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  productName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+              const SizedBox(height: 8),
+
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.remove_circle_outline),
+                    color: Colors.deepPurple,
+                    onPressed: quantityNumber <= 1
+                        ? null
+                        : () async {
+                            await ApiService.decreaseCartItem(cartItemId);
+                            refreshCart();
+                          },
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Adet: $quantity',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                ),
-              ],
-            ),
+                  Text(
+                    quantityNumber.toString(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add_circle_outline),
+                    color: Colors.deepPurple,
+                    onPressed: () async {
+                      await ApiService.increaseCartItem(cartItemId);
+                      refreshCart();
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    color: Colors.red,
+                    onPressed: () async {
+                      await ApiService.removeCartItem(cartItemId);
+                      refreshCart();
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
-          Text(
-            '${(price * quantityNumber).toStringAsFixed(0)} TL',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.deepPurple,
-            ),
+        ),
+
+        Text(
+          '${(price * quantityNumber).toStringAsFixed(0)} TL',
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.deepPurple,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 }

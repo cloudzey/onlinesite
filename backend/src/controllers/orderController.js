@@ -15,10 +15,7 @@ const createOrder = async (req, res) => {
 
     if (cartResult.rows.length === 0) {
       await client.query("ROLLBACK");
-
-      return res.status(400).json({
-        message: "Cart not found.",
-      });
+      return res.status(400).json({ message: "Cart not found." });
     }
 
     const cart = cartResult.rows[0];
@@ -44,16 +41,12 @@ const createOrder = async (req, res) => {
 
     if (cartItems.length === 0) {
       await client.query("ROLLBACK");
-
-      return res.status(400).json({
-        message: "Cart is empty.",
-      });
+      return res.status(400).json({ message: "Cart is empty." });
     }
 
     for (const item of cartItems) {
-      if (item.stock < item.quantity) {
+      if (Number(item.stock) < Number(item.quantity)) {
         await client.query("ROLLBACK");
-
         return res.status(400).json({
           message: `Not enough stock for product: ${item.product_name}`,
         });
@@ -64,13 +57,33 @@ const createOrder = async (req, res) => {
       return total + Number(item.price) * Number(item.quantity);
     }, 0);
 
+    const addressResult = await client.query(
+      `
+      SELECT address_id
+      FROM addresses
+      WHERE user_id = $1
+      ORDER BY address_id DESC
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+    const selectedAddressId = addressResult.rows[0]?.address_id;
+
+    if (!selectedAddressId) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "User address not found.",
+      });
+    }
+
     const orderResult = await client.query(
       `
-      INSERT INTO orders (user_id, total_amount, order_status)
-      VALUES ($1, $2, $3)
-      RETURNING order_id, user_id, total_amount, order_status, order_date
+      INSERT INTO orders (user_id, address_id, total_amount, order_status)
+      VALUES ($1, $2, $3, $4)
+      RETURNING order_id, user_id, address_id, total_amount, order_status, order_date
       `,
-      [userId, totalAmount, "pending"]
+      [userId, selectedAddressId, totalAmount, "pending"]
     );
 
     const order = orderResult.rows[0];
@@ -94,10 +107,9 @@ const createOrder = async (req, res) => {
       );
     }
 
-    await client.query(
-      "DELETE FROM cart_items WHERE cart_id = $1",
-      [cart.cart_id]
-    );
+    await client.query("DELETE FROM cart_items WHERE cart_id = $1", [
+      cart.cart_id,
+    ]);
 
     await client.query("COMMIT");
 
@@ -128,6 +140,7 @@ const getMyOrders = async (req, res) => {
       SELECT
         order_id,
         user_id,
+        address_id,
         total_amount,
         order_status,
         order_date
@@ -159,6 +172,7 @@ const getOrderDetail = async (req, res) => {
       SELECT
         order_id,
         user_id,
+        address_id,
         total_amount,
         order_status,
         order_date
