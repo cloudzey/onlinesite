@@ -26,6 +26,9 @@ class AppConstants {
     ),
   ]);
 
+static final ValueNotifier<List<ProductModel>> favoritesNotifier =
+    ValueNotifier<List<ProductModel>>([]);
+
   // 2. SEPET HAVUZU (CartItems Yapısı)
   static final ValueNotifier<List<CartItemModel>> cartNotifier = ValueNotifier<List<CartItemModel>>([]);
 

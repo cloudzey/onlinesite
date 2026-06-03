@@ -13,11 +13,25 @@ class _CartViewState extends State<CartView> {
   late Future<Map<String, dynamic>> cartFuture;
   bool isCreatingOrder = false;
 
+  final TextEditingController cardNameController = TextEditingController();
+final TextEditingController cardNumberController = TextEditingController();
+final TextEditingController expiryDateController = TextEditingController();
+final TextEditingController cvvController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     cartFuture = ApiService.getCart();
   }
+
+  @override
+void dispose() {
+  cardNameController.dispose();
+  cardNumberController.dispose();
+  expiryDateController.dispose();
+  cvvController.dispose();
+  super.dispose();
+}
 
   void refreshCart() {
     setState(() {
@@ -34,10 +48,75 @@ class _CartViewState extends State<CartView> {
     );
   }
 
+  bool validatePaymentForm() {
+  final cardName = cardNameController.text.trim();
+  final cardNumber = cardNumberController.text.replaceAll(' ', '').trim();
+  final expiryDate = expiryDateController.text.trim();
+  final cvv = cvvController.text.trim();
+
+  if (cardName.isEmpty) {
+    showMessage('Kart üzerindeki isim boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (cardName.length < 3) {
+    showMessage('Kart üzerindeki isim en az 3 karakter olmalı.', color: Colors.red);
+    return false;
+  }
+
+  if (cardNumber.isEmpty) {
+    showMessage('Kart numarası boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (!RegExp(r'^[0-9]{16}$').hasMatch(cardNumber)) {
+    showMessage('Kart numarası 16 haneli olmalı ve sadece rakam içermeli.', color: Colors.red);
+    return false;
+  }
+
+  if (expiryDate.isEmpty) {
+    showMessage('Son kullanma tarihi boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (!RegExp(r'^(0[1-9]|1[0-2])\/[0-9]{2}$').hasMatch(expiryDate)) {
+    showMessage('Son kullanma tarihi AA/YY formatında olmalı. Örn: 12/26', color: Colors.red);
+    return false;
+  }
+
+  final parts = expiryDate.split('/');
+  final month = int.parse(parts[0]);
+  final year = int.parse('20${parts[1]}');
+
+  final now = DateTime.now();
+  final expiry = DateTime(year, month + 1, 0);
+
+  if (expiry.isBefore(DateTime(now.year, now.month, 1))) {
+    showMessage('Kartın son kullanma tarihi geçmiş olamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (cvv.isEmpty) {
+    showMessage('CVV boş bırakılamaz.', color: Colors.red);
+    return false;
+  }
+
+  if (!RegExp(r'^[0-9]{3}$').hasMatch(cvv)) {
+    showMessage('CVV 3 haneli olmalı ve sadece rakam içermeli.', color: Colors.red);
+    return false;
+  }
+
+  return true;
+}
+
   Future<void> completeOrder() async {
-    setState(() {
-      isCreatingOrder = true;
-    });
+  if (!validatePaymentForm()) {
+    return;
+  }
+
+  setState(() {
+    isCreatingOrder = true;
+  });
 
     try {
       await ApiService.createOrder();
@@ -45,6 +124,11 @@ class _CartViewState extends State<CartView> {
       if (!mounted) return;
 
       showMessage('Ödeme başarılı! Siparişiniz alındı. 🎉');
+
+      cardNameController.clear();
+      cardNumberController.clear();
+      expiryDateController.clear();
+      cvvController.clear();
 
       refreshCart();
     } catch (e) {
@@ -183,6 +267,7 @@ class _CartViewState extends State<CartView> {
                     const SizedBox(height: 15),
 
                     TextField(
+                      controller: cardNameController,
                       decoration: InputDecoration(
                         labelText: 'Kart Üzerindeki İsim',
                         prefixIcon: const Icon(Icons.person),
@@ -194,9 +279,12 @@ class _CartViewState extends State<CartView> {
                     const SizedBox(height: 12),
 
                     TextField(
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        labelText: 'Kart Numarası',
+                    controller: cardNumberController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 16,
+                    decoration: InputDecoration(
+                    counterText: '',
+                    labelText: 'Kart Numarası',
                         prefixIcon: const Icon(Icons.credit_card),
                         hintText: '0000 0000 0000 0000',
                         border: OutlineInputBorder(
@@ -210,9 +298,12 @@ class _CartViewState extends State<CartView> {
                       children: [
                         Expanded(
                           child: TextField(
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: 'Son Kul. Tarihi',
+  controller: expiryDateController,
+  keyboardType: TextInputType.text,
+  maxLength: 5,
+  decoration: InputDecoration(
+    counterText: '',
+    labelText: 'Son Kul. Tarihi',
                               hintText: 'AA/YY',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -223,10 +314,13 @@ class _CartViewState extends State<CartView> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
-                            keyboardType: TextInputType.number,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              labelText: 'CVV',
+  controller: cvvController,
+  keyboardType: TextInputType.number,
+  obscureText: true,
+  maxLength: 3,
+  decoration: InputDecoration(
+    counterText: '',
+    labelText: 'CVV',
                               hintText: '123',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),

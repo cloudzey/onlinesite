@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/models/product_model.dart';
 import '../../core/services/api_service.dart';
+import '../../core/constants/app_constants.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -180,45 +181,146 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildProductCard(BuildContext context, ProductModel product) {
-    return GestureDetector(
-      onTap: () => Navigator.pushNamed(context, '/product_detail', arguments: product),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(color: Colors.grey[100], borderRadius: const BorderRadius.vertical(top: Radius.circular(12))),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Image.network(
-                    product.imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, color: Colors.grey),
-                  ),
+  return GestureDetector(
+    onTap: () => Navigator.pushNamed(
+      context,
+      '/product_detail',
+      arguments: product,
+    ),
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(6.0), // Padding biraz küçültüldü
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
                 children: [
-                  Text(product.productName, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  const SizedBox(height: 2),
-                  Text('${product.price.toStringAsFixed(0)} TL', style: const TextStyle(color: Colors.deepPurple, fontWeight: FontWeight.bold, fontSize: 14)),
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: Image.network(
+                      product.imageUrl,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(Icons.image, color: Colors.grey),
+                        );
+                      },
+                    ),
+                  ),
+
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: ValueListenableBuilder<List<ProductModel>>(
+                      valueListenable: AppConstants.favoritesNotifier,
+                      builder: (context, favorites, child) {
+                        final isFavorite = favorites.any(
+                          (item) => item.productId == product.productId,
+                        );
+
+                        return CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Colors.white,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: isFavorite ? Colors.red : Colors.grey,
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              final currentFavorites =
+                                  AppConstants.favoritesNotifier.value;
+
+                              if (isFavorite) {
+                                AppConstants.favoritesNotifier.value =
+                                    currentFavorites
+                                        .where(
+                                          (item) =>
+                                              item.productId !=
+                                              product.productId,
+                                        )
+                                        .toList();
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '${product.productName} favorilerden çıkarıldı.',
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                AppConstants.favoritesNotifier.value = [
+                                  product,
+                                  ...currentFavorites,
+                                ];
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      '${product.productName} favorilere eklendi.',
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          Padding(
+            padding: const EdgeInsets.all(6.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.productName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${product.price.toStringAsFixed(0)} TL',
+                  style: const TextStyle(
+                    color: Colors.deepPurple,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

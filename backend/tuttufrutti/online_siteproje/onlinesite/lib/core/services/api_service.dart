@@ -23,13 +23,15 @@ class ApiService {
   }
 
   static Future<Map<String, String>> authHeaders() async {
-    final token = await getToken();
+  final token = await getToken();
 
-    return {
-      'Content-Type': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
-    };
-  }
+  print('KAYITLI TOKEN: $token');
+
+  return {
+    'Content-Type': 'application/json',
+    if (token != null) 'Authorization': 'Bearer $token',
+  };
+}
 
   static Future<List<ProductModel>> getProducts() async {
     final response = await http.get(Uri.parse('$baseUrl/api/products'));
@@ -149,41 +151,47 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getCart() async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/api/cart'),
-      headers: await authHeaders(),
-    );
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/cart'),
+    headers: await authHeaders(),
+  );
 
-    final data = jsonDecode(response.body);
+  print('GET CART STATUS: ${response.statusCode}');
+  print('GET CART BODY: ${response.body}');
 
-    if (response.statusCode == 200) {
-      return data;
-    } else {
-      throw Exception(data['message'] ?? 'Sepet getirilemedi');
-    }
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? data['error'] ?? 'Sepet getirilemedi');
   }
+}
 
   static Future<Map<String, dynamic>> addToCart({
-    required int productId,
-    int quantity = 1,
-  }) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/cart/add'),
-      headers: await authHeaders(),
-      body: jsonEncode({
-        'product_id': productId,
-        'quantity': quantity,
-      }),
-    );
+  required int productId,
+  int quantity = 1,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/cart/add'),
+    headers: await authHeaders(),
+    body: jsonEncode({
+      'product_id': productId,
+      'quantity': quantity,
+    }),
+  );
 
-    final data = jsonDecode(response.body);
+  print('ADD CART STATUS: ${response.statusCode}');
+  print('ADD CART BODY: ${response.body}');
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return data;
-    } else {
-      throw Exception(data['message'] ?? 'Ürün sepete eklenemedi');
-    }
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 201 || response.statusCode == 200) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? data['error'] ?? 'Ürün sepete eklenemedi');
   }
+}
 
   static Future<Map<String, dynamic>> updateCartItem({
     required int productId,

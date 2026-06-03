@@ -250,7 +250,16 @@ class _AuthViewState extends State<AuthView> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: isLoading ? null : () {},
+                          onPressed: isLoading
+    ? null
+    : () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Şifre sıfırlama özelliği şu anda aktif değil.'),
+            backgroundColor: Colors.grey,
+          ),
+        );
+      },
                           child: const Text(
                             'Şifremi Unuttum',
                             style: TextStyle(color: Colors.grey),
