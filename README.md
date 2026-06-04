@@ -8,36 +8,10 @@ Grup No: 33
 
 Grup Üyeleri ve Görevleri
 Sueda Tut: Veritabanı tabloları, SQL kodları, tablo ilişkileri, ER diyagramı ve dummy data
-Zeynep Güngör: Web frontend tasarımı, arayüz düzenlemeleri ve iOS/mobil arayüz çalışmaları
+Zeynep Güngör: Web frontend tasarımı, arayüz düzenlemeleri 
 Zeynep Bulut: Backend geliştirme, API bağlantıları, Supabase entegrasyonu ve test süreçleri
+Tüm Ekip=GitHub düzeni, sunum hazırlığı, README raporu ve genel proje kontrolü
 
-İçindekiler
-1. Proje Özeti 
-2. Problem Tanımı 
-3. Projenin Amacı 
-4. Kullanılan Teknolojiler 
-5. Geliştirme Ortamı 
-6. Genel Sistem Yapısı 
-7. Veritabanı Tasarımı 
-8. Tablolar ve İlişkiler 
-9. Normalizasyon Açıklaması 
-10. Kullanılan Kısıtlayıcılar 
-11. Index Kullanımı 
-12. View Kullanımı 
-13. Trigger Kullanımı 
-14. Stored Procedure Kullanımı 
-15. Akış Şeması 
-16. Yazılım Mimarisi 
-17. API Yapısı 
-18. Arayüz Görselleri 
-19. Yapılan Araştırmalar 
-20. Test Verileri 
-21. Projenin Çalıştırılması 
-22. GitHub Proje Yapısı 
-23. Görev Dağılımı 
-24. Sonuç 
-25. Referanslar 
-26. Teslim Dosyaları
 
 1. Proje Özeti
 Bu proje, kullanıcıların ürünleri görüntüleyebildiği, kategoriye göre filtreleme ve ürün arama yapabildiği, ürünleri sepete ekleyebildiği, sipariş oluşturabildiği ve sipariş geçmişini takip edebildiği web ve iOS destekli bir e-ticaret sistemidir. Sistem aynı zamanda admin rolüne sahip kullanıcıların ürün ekleme, ürün güncelleme, ürün silme ve stok kontrolü gibi yönetim işlemlerini gerçekleştirebilmesini hedeflemektedir. 
@@ -557,13 +531,8 @@ cd mobile
 flutter pub get 
 flutter run
 
-24. Görev Dağılımı
-Sueda Tut=Veritabanı tabloları, SQL kodları, tablo ilişkileri,ER diyagramı, dummy data ve veritabanı testleri
-Zeynep Güngör=Web frontend tasarımı, arayüz düzenlemeleri ve iOS/mobil arayüz çalışmaları
-Zeynep Bulut=Backend geliştirme, API bağlantıları, Supabase entegrasyonu ve sistem testleri
-Tüm Ekip=GitHub düzeni, sunum hazırlığı, README raporu ve genel proje kontrolü
 
-25. Sonuç
+24. Sonuç
 Bu proje kapsamında web ve iOS platformlarında çalışabilecek temel özelliklere sahip bir e-ticaret sistemi geliştirilmiştir. Projede kullanıcı, ürün, kategori, sepet, sipariş ve adres işlemleri için ilişkisel bir veritabanı tasarımı oluşturulmuştur. 
 
 Veritabanı tasarımı yapılırken veri tekrarını azaltmak, veri bütünlüğünü korumak ve ekleme, silme, güncelleme anomalilerini önlemek amacıyla normalizasyon kurallarına dikkat edilmiştir. Primary Key, Foreign Key, Unique, Not Null, Check ve Default kısıtlayıcıları ile verilerin tutarlı saklanması sağlanmıştır. Bunun yanında Index, View, Trigger, Function ve Stored Procedure yapılarından yararlanılarak veritabanı işlemleri daha düzenli, hızlı ve kontrollü hale getirilmiştir. 
@@ -574,7 +543,7 @@ Uygulamanın arayüz ve istemci tarafı geliştirilirken responsive (esnek) tasa
 
 Proje geliştirme sürecinde ilişkisel veritabanı tasarımı, SQL sorguları, PostgreSQL kullanımı, Supabase bağlantısı, backend geliştirme, REST API yapısı ve Flutter tabanlı frontend/mobil arayüz geliştirme süreçleri gerçek bir e-ticaret senaryosu üzerinden uygulanmıştır. Sonuç olarak kullanıcıların ürünleri görüntüleyebildiği, sepete ürün ekleyebildiği, sipariş oluşturabildiği ve siparişlerini takip edebildiği; admin tarafında ise ürün ve stok yönetimi yapılabilen bir sistem ortaya çıkarılmıştır.
 
-26. Referanslar
+25. Referanslar
 [1] PostgreSQL Documentation, https://www.postgresql.org/docs/ 
 
 [2] Supabase Documentation, https://supabase.com/docs 
