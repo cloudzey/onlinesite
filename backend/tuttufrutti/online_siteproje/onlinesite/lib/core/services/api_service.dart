@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product_model.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:5000';
+  static const String baseUrl = 'http://127.0.0.1:5001';
 
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
