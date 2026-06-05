@@ -65,10 +65,10 @@ order_items: Sipariş içindeki ürün detaylarını tutar.
 addresses: Kullanıcılara ait adres bilgilerini tutar.
 shops: Mağazalara ait temel bilgileri tutar.
 
-***************VERİTABANI ER DİYAGRAMI GÖRSELİ****
+![ER Diyagramı](görseller/E-Ticaret-ER-Diyagramı.png)
 
 8. Tablolar ve İlişkiler
-***TABLO FOTOSU***
+![Tablo 8](görseller/table8.png)
 
 9. Normalizasyon Açıklaması
 Veritabanı tasarımında veri tekrarını azaltmak, veri bütünlüğünü korumak ve ekleme, silme, güncelleme anomalilerini önlemek amacıyla normalizasyon kurallarına dikkat edilmiştir. Ürün kategorileri products tablosunda metin olarak tekrar tekrar tutulmak yerine categories tablosunda saklanmıştır. Products tablosu yalnızca category_id alanı ile kategoriye bağlanmıştır. 
@@ -77,7 +77,7 @@ Benzer şekilde sipariş bilgileri orders tablosunda, siparişin ürün bazlı d
 
 10. Kullanılan Kısıtlayıcılar
 Veri bütünlüğünü sağlamak için aşağıdaki kısıtlayıcılar kullanılmıştır:
-***Tablo Fotosu***
+![Tablo 10](görseller/table10.png)
 
 11. Index Kullanımı
 Index yapıları, sık kullanılan sorguların daha hızlı çalışması için kullanılmıştır. Özellikle kullanıcı e-posta aramaları, ürün adı aramaları ve kategoriye göre ürün listeleme işlemleri için index kullanımı performans açısından önemlidir. 
@@ -138,15 +138,15 @@ $$;
 
 15. Akış Şeması
 Aşağıdaki akış şeması, müşterinin sisteme girişinden sipariş durumunun görüntülenmesine kadar olan temel işlemleri göstermektedir.
-***Tablo Fotosu***
+![Resim 15](görseller/img15.png)
 
 16. Yazılım Mimarisi
 Proje katmanlı mimari mantığıyla geliştirilmiştir. Kullanıcı arayüzü, API katmanı, backend iş mantığı ve veritabanı katmanı birbirinden ayrılarak sistemin daha düzenli ve yönetilebilir olması sağlanmıştır.
-***Tablo Fotosu***
+![Resim 16](görseller/img16.png)
 
 17. API Yapısı
 Backend tarafında temel işlemler için aşağıdaki REST API uç noktaları planlanmıştır:
-***Tablo Fotoso***
+![Tablo 17](görseller/table17.png)
 
 18. Backend Kodları
 Kullanıcı Kimlik Doğrulama Kontrolü (AuthController) 
@@ -284,14 +284,20 @@ static Future<List<ProductModel>> getProducts() async {
 } 
 
 19. Arayüz Görselleri
-***Ana sayfa görseli***
-***Ürün Listeleme Sayfası***
-***Ürün detay sayfası***
-***sepet sayfası***
-***siparişlerim sayfası***
-***ios arayüz***
+![Kayıt Ekranı](görseller/register.png)
+![Giriş Rkranı](görseller/login.png)
+![Ana Ekran](görseller/main-screen.png)
+![Favoriler](görseller/favorites.png)
+![Sipariş](görseller/cart-and-order.png)
+![Sipariş](görseller/cart-and-order-2.png)
+![Sipariş](görseller/orders.png)
+![Sipariş](görseller/order-detail.png)
+![Mağaza](görseller/shop.png)
+![Ürün Ekleme](görseller/add-product.png)
+![Ürün Düzenleme](görseller/update-product.png)
+![Sipariş Durumu Güncelleme](görseller/update-order-status.png)
 
-20. Arayüz Klasör Yapısı ve Mimari Düzen
+21. Arayüz Klasör Yapısı ve Mimari Düzen
 Projenin kaynak kodları modüler bir klasör hiyerarşisinde yapılandırılmıştır. 
 
 core/models/: Veritabanı (ER) diyagramındaki tablolarla (Products, Orders) uyumlu Dart sınıflarını barındırır. 
@@ -470,23 +476,14 @@ AppConstants altında tanımlanan küresel asenkron veri havuzu, bir ürün ekle
 Yapılan Araştırmalar 
 
 Proje geliştirme sürecinde hem veritabanı tasarımı hem de backend/frontend entegrasyonu açısından çeşitli araştırmalar yapılmıştır. Araştırmaların temel amacı, sistemin yalnızca çalışan bir arayüzden ibaret olmaması; veritabanı, API ve kullanıcı akışlarının birlikte tutarlı şekilde çalışmasıdır. 
-
-PostgreSQL tablo ilişkileri ve veri tipleri 
-
-5N normalizasyon kuralları 
-
-Primary Key, Foreign Key, Unique, Not Null, Default ve Check kısıtlayıcıları 
-
-Index, View, Trigger, Function ve Stored Procedure kullanımı 
-
-Supabase bağlantısı ve bağlantı bilgilerinin güvenli tutulması 
-
-Node.js ve Express.js ile REST API geliştirme 
-
-Flutter ile web ve iOS arayüz geliştirme 
-
-GitHub üzerinde proje dosyalarının düzenli tutulması 
-
+*PostgreSQL tablo ilişkileri ve veri tipleri 
+*5N normalizasyon kuralları 
+*Primary Key, Foreign Key, Unique, Not Null, Default ve Check kısıtlayıcıları 
+*Index, View, Trigger, Function ve Stored Procedure kullanımı 
+*Supabase bağlantısı ve bağlantı bilgilerinin güvenli tutulması 
+*Node.js ve Express.js ile REST API geliştirme 
+*Flutter ile web ve iOS arayüz geliştirme 
+*GitHub üzerinde proje dosyalarının düzenli tutulması 
 Karşılaşılan ilk önemli sorun, backend ile veritabanı bağlantısının doğru yapılandırılması olmuştur. Bu süreçte Supabase bağlantı bilgileri, environment değişkenleri ve backend tarafındaki bağlantı ayarları kontrol edilmiştir. Veritabanı bağlantısının doğrudan kod içine yazılmaması, .env dosyası üzerinden yönetilmesi daha güvenli ve düzenli bir çözüm olarak tercih edilmiştir. 
 
 Bir diğer önemli aşama tablolar arasındaki ilişkilerin doğru kurulmasıdır. Orders tablosundaki user_id alanı users tablosuna, order_items tablosundaki order_id ve product_id alanları orders ve products tablolarına bağlanmıştır. Products tablosundaki category_id alanı categories tablosu ile ilişkilendirilmiş; cart ve addresses tablolarında ise user_id üzerinden kullanıcı ilişkileri kurulmuştur. Bu yapı sayesinde sistemin veri bütünlüğü korunmuş ve gerçek bir e-ticaret senaryosuna uygun bir model elde edilmiştir. 
@@ -501,7 +498,7 @@ Ayrıca trigger ve procedure yapılarının nasıl çalışacağı araştırılm
 
  22. Test Verileri
 PDF’de belirtilen beklentiye uygun olarak her tabloya en az 10 adet gerçekçi dummy data eklenmelidir. Bu veriler ile View, Trigger, Index, Function ve Procedure yapılarının çalışıp çalışmadığı test edilmelidir.
-***Tablo görseli***
+![Tablo 22](görseller/table20.png)
 
 23. Projenin Çalıştırıması
 
@@ -526,8 +523,8 @@ cd backend\tuttufrutti\online_siteproje\onlinesite
 flutter pub get 
 flutter run -d chrome 
 
-23.5 iOS / Mobil Kurulumu 
-cd mobile 
+23.5 iOS Kurulumu 
+cd ios
 flutter pub get 
 flutter run
 
@@ -544,17 +541,11 @@ Uygulamanın arayüz ve istemci tarafı geliştirilirken responsive (esnek) tasa
 Proje geliştirme sürecinde ilişkisel veritabanı tasarımı, SQL sorguları, PostgreSQL kullanımı, Supabase bağlantısı, backend geliştirme, REST API yapısı ve Flutter tabanlı frontend/mobil arayüz geliştirme süreçleri gerçek bir e-ticaret senaryosu üzerinden uygulanmıştır. Sonuç olarak kullanıcıların ürünleri görüntüleyebildiği, sepete ürün ekleyebildiği, sipariş oluşturabildiği ve siparişlerini takip edebildiği; admin tarafında ise ürün ve stok yönetimi yapılabilen bir sistem ortaya çıkarılmıştır.
 
 25. Referanslar
-[1] PostgreSQL Documentation, https://www.postgresql.org/docs/ 
 
-[2] Supabase Documentation, https://supabase.com/docs 
-
-[3] Node.js Documentation, https://nodejs.org/docs/ 
-
-[4] Express.js Documentation, https://expressjs.com/ 
-
-[5] Flutter Documentation, https://docs.flutter.dev/ 
-
-[6] MDN Web Docs, https://developer.mozilla.org/ 
+[1] Supabase Documentation, https://supabase.com/docs 
+[2] Node.js Documentation, https://nodejs.org/docs/ 
+[3] Express.js Documentation, https://expressjs.com/ 
+[4] Flutter Documentation, https://docs.flutter.dev/ 
 
 
 
