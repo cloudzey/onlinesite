@@ -6,7 +6,6 @@ const createOrder = async (req, res) => {
   try {
     const userId = req.user.user_id;
 
-    // Frontend'den gelen adres bilgileri
     const {
       address_id,
       addressId,
@@ -70,7 +69,7 @@ const createOrder = async (req, res) => {
 
     let selectedAddressId = address_id || addressId || null;
 
-    // Eğer frontend hazır address_id gönderdiyse, bu adres gerçekten bu kullanıcıya mı ait kontrol et
+    
     if (selectedAddressId) {
       const addressCheckResult = await client.query(
         `
@@ -89,7 +88,6 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // Eğer address_id gelmediyse, checkout formundan gelen adresi addresses tablosuna ekle
     if (!selectedAddressId) {
       const finalCity = city?.trim();
       const finalDistrict = district?.trim();
