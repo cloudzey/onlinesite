@@ -284,6 +284,7 @@ static Future<List<ProductModel>> getProducts() async {
 } 
 
 19. Arayüz Görselleri
+WEB
 ![Kayıt Ekranı](görseller/register.png)
 ![Giriş Rkranı](görseller/login.png)
 ![Ana Ekran](görseller/main-screen.png)
@@ -296,6 +297,16 @@ static Future<List<ProductModel>> getProducts() async {
 ![Ürün Ekleme](görseller/add-product.png)
 ![Ürün Düzenleme](görseller/update-product.png)
 ![Sipariş Durumu Güncelleme](görseller/update-order-status.png)
+
+iOS
+![Kayıt Ekranı](görseller/ios-login.png)
+![Ana Ekran](görseller/ios-main-screen.png)
+![Sepet](görseller/ios-cart1.png)
+![Sepet](görseller/ios-cart2.png)
+![Sipariş Detayı](görseller/ios-orders.png)
+![Sipariş Detayı](görseller/ios-order-detail.png)
+![Ürün Ekleme](görseller/ios-add-product.png)
+![Ürün Detayı](görseller/ios-product.png)
 
 21. Arayüz Klasör Yapısı ve Mimari Düzen
 Projenin kaynak kodları modüler bir klasör hiyerarşisinde yapılandırılmıştır. 
