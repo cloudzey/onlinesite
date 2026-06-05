@@ -176,7 +176,11 @@ phoneController.dispose();
   });
 
     try {
-      await ApiService.createOrder();
+      await ApiService.createOrder(
+  city: cityController.text.trim(),
+  district: districtController.text.trim(),
+  fullAddress: fullAddressController.text.trim(),
+);
 
       if (!mounted) return;
 

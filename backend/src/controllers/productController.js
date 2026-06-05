@@ -182,15 +182,14 @@ const updateProduct = async (req, res) => {
     const result = await pool.query(
       `
       UPDATE products
-      SET 
+      SET
         product_name = $1,
         description = $2,
         price = $3,
         stock = $4,
         image_url = $5,
         category_id = $6,
-        shop_id = $7,
-        updated_at = CURRENT_TIMESTAMP
+        shop_id = $7
       WHERE product_id = $8
       RETURNING *
       `,

@@ -24,29 +24,45 @@ class _OrdersViewState extends State<OrdersView> {
   }
 
   Color getStatusColor(String status) {
-    if (status == 'delivered' || status == 'Teslim Edildi') {
-      return Colors.green;
-    }
-
-    if (status == 'shipped' || status == 'Yolda') {
-      return Colors.blue;
-    }
-
-    if (status == 'cancelled' || status == 'İptal Edildi') {
-      return Colors.red;
-    }
-
+  if (status == 'pending') {
     return Colors.orange;
   }
 
-  String getStatusText(String status) {
-    if (status == 'pending') return 'Hazırlanıyor';
-    if (status == 'shipped') return 'Yolda';
-    if (status == 'delivered') return 'Teslim Edildi';
-    if (status == 'cancelled') return 'İptal Edildi';
-
-    return status;
+  if (status == 'preparing') {
+    return Colors.blue;
   }
+
+  if (status == 'shipped') {
+    return Colors.purple;
+  }
+
+  if (status == 'delivered') {
+    return Colors.green;
+  }
+
+  if (status == 'cancelled') {
+    return Colors.red;
+  }
+
+  return Colors.grey;
+}
+
+String getStatusText(String? status) {
+  switch (status) {
+    case 'pending':
+      return 'Sipariş alındı';
+    case 'preparing':
+      return 'Hazırlanıyor';
+    case 'shipped':
+      return 'Kargoya verildi';
+    case 'delivered':
+      return 'Teslim edildi';
+    case 'cancelled':
+      return 'İptal edildi';
+    default:
+      return 'Durum bilinmiyor';
+  }
+}
 
   String formatDate(dynamic rawDate) {
     if (rawDate == null) return '-';

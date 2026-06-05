@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/services/api_service.dart';
+import 'admin_orders_view.dart';
 
 class AdminView extends StatefulWidget {
   const AdminView({super.key});
@@ -149,19 +150,37 @@ if (shopId == null) {
         backgroundColor: Colors.amber[700],
         foregroundColor: Colors.white,
         actions: [
-          TextButton.icon(
-            onPressed: () => Navigator.pushNamed(context, '/admin_shop'),
-            icon: const Icon(Icons.storefront, color: Colors.white),
-            label: const Text(
-              'Ürünleri Yönet',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-        ],
+  TextButton.icon(
+    onPressed: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const AdminOrdersView(),
+        ),
+      );
+    },
+    icon: const Icon(Icons.receipt_long, color: Colors.white),
+    label: const Text(
+      'Siparişler',
+      style: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ),
+  TextButton.icon(
+    onPressed: () => Navigator.pushNamed(context, '/admin_shop'),
+    icon: const Icon(Icons.storefront, color: Colors.white),
+    label: const Text(
+      'Ürünler',
+      style: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  ),
+  const SizedBox(width: 10),
+],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

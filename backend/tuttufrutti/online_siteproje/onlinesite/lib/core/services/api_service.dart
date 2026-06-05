@@ -279,20 +279,36 @@ static Future<Map<String, String>> shopAuthHeaders() async {
     }
   }
 
-  static Future<Map<String, dynamic>> createOrder() async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/api/orders/create'),
-      headers: await authHeaders(),
-    );
+ static Future<Map<String, dynamic>> createOrder({
+  required String city,
+  required String district,
+  required String fullAddress,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/orders/create'),
+    headers: await authHeaders(),
+    body: jsonEncode({
+      'city': city,
+      'district': district,
+      'full_address': fullAddress,
+    }),
+  );
 
-    final data = jsonDecode(response.body);
+  print('CREATE ORDER STATUS: ${response.statusCode}');
+  print('CREATE ORDER BODY: ${response.body}');
 
-    if (response.statusCode == 201) {
-      return data;
-    } else {
-      throw Exception(data['message'] ?? 'Sipariş oluşturulamadı');
-    }
+  if (response.body.trim().isEmpty) {
+    throw Exception('Sunucudan boş cevap geldi.');
   }
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 201) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? data['error'] ?? 'Sipariş oluşturulamadı');
+  }
+}
 
   static Future<List<dynamic>> getOrders() async {
     final response = await http.get(
@@ -353,26 +369,32 @@ static Future<Map<String, dynamic>> updateProduct({
   required int categoryId,
   int shopId = 1,
 }) async {
+  final requestBody = {
+    'product_name': productName,
+    'description': description,
+    'price': price,
+    'stock': stock,
+    'image_url': imageUrl,
+    'category_id': categoryId,
+    'shop_id': shopId,
+  };
+
   final response = await http.put(
     Uri.parse('$baseUrl/api/products/$productId'),
     headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'product_name': productName,
-      'description': description,
-      'price': price,
-      'stock': stock,
-      'image_url': imageUrl,
-      'category_id': categoryId,
-      'shop_id': shopId,
-    }),
+    body: jsonEncode(requestBody),
   );
+
+  print('UPDATE PRODUCT STATUS: ${response.statusCode}');
+  print('UPDATE PRODUCT BODY: ${response.body}');
+  print('UPDATE PRODUCT SENT: ${jsonEncode(requestBody)}');
 
   final data = jsonDecode(response.body);
 
   if (response.statusCode == 200) {
     return data;
   } else {
-    throw Exception(data['message'] ?? 'Ürün güncellenemedi');
+    throw Exception(data['message'] ?? data['error'] ?? 'Ürün güncellenemedi');
   }
 }
 
@@ -494,6 +516,42 @@ static Future<void> removeCartItem(int cartItemId) async {
 
   if (response.statusCode != 200) {
     throw Exception('Ürün sepetten silinemedi.');
+  }
+}
+
+static Future<List<dynamic>> getAllOrdersForAdmin() async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/api/orders/admin/all'),
+    headers: {'Content-Type': 'application/json'},
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? 'Siparişler getirilemedi');
+  }
+}
+
+static Future<Map<String, dynamic>> updateOrderStatus({
+  required int orderId,
+  required String orderStatus,
+}) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/api/orders/$orderId/status'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      'order_status': orderStatus,
+    }),
+  );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return data;
+  } else {
+    throw Exception(data['message'] ?? 'Sipariş durumu güncellenemedi');
   }
 }
 

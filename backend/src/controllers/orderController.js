@@ -6,6 +6,17 @@ const createOrder = async (req, res) => {
   try {
     const userId = req.user.user_id;
 
+    // Frontend'den gelen adres bilgileri
+    const {
+      address_id,
+      addressId,
+      city,
+      district,
+      full_address,
+      fullAddress,
+      address,
+    } = req.body;
+
     await client.query("BEGIN");
 
     const cartResult = await client.query(
@@ -57,24 +68,53 @@ const createOrder = async (req, res) => {
       return total + Number(item.price) * Number(item.quantity);
     }, 0);
 
-    const addressResult = await client.query(
-      `
-      SELECT address_id
-      FROM addresses
-      WHERE user_id = $1
-      ORDER BY address_id DESC
-      LIMIT 1
-      `,
-      [userId]
-    );
+    let selectedAddressId = address_id || addressId || null;
 
-    const selectedAddressId = addressResult.rows[0]?.address_id;
+    // Eğer frontend hazır address_id gönderdiyse, bu adres gerçekten bu kullanıcıya mı ait kontrol et
+    if (selectedAddressId) {
+      const addressCheckResult = await client.query(
+        `
+        SELECT address_id
+        FROM addresses
+        WHERE address_id = $1 AND user_id = $2
+        `,
+        [selectedAddressId, userId]
+      );
 
+      if (addressCheckResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          message: "Selected address does not belong to this user.",
+        });
+      }
+    }
+
+    // Eğer address_id gelmediyse, checkout formundan gelen adresi addresses tablosuna ekle
     if (!selectedAddressId) {
-      await client.query("ROLLBACK");
-      return res.status(400).json({
-        message: "User address not found.",
-      });
+      const finalCity = city?.trim();
+      const finalDistrict = district?.trim();
+      const finalFullAddress =
+        full_address?.trim() ||
+        fullAddress?.trim() ||
+        address?.trim();
+
+      if (!finalCity || !finalDistrict || !finalFullAddress) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          message: "Address information is required.",
+        });
+      }
+
+      const newAddressResult = await client.query(
+        `
+        INSERT INTO addresses (user_id, city, district, full_address)
+        VALUES ($1, $2, $3, $4)
+        RETURNING address_id
+        `,
+        [userId, finalCity, finalDistrict, finalFullAddress]
+      );
+
+      selectedAddressId = newAddressResult.rows[0].address_id;
     }
 
     const orderResult = await client.query(
@@ -116,6 +156,7 @@ const createOrder = async (req, res) => {
     res.status(201).json({
       message: "Order created successfully.",
       order,
+      address_id: selectedAddressId,
     });
   } catch (error) {
     await client.query("ROLLBACK");
@@ -221,8 +262,94 @@ const getOrderDetail = async (req, res) => {
   }
 };
 
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { order_status } = req.body;
+
+    const allowedStatuses = [
+      "pending",
+      "preparing",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
+
+    if (!order_status || !allowedStatuses.includes(order_status)) {
+      return res.status(400).json({
+        message: "Invalid order status.",
+      });
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE orders
+      SET order_status = $1
+      WHERE order_id = $2
+      RETURNING order_id, user_id, address_id, total_amount, order_status, order_date
+      `,
+      [order_status, orderId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: "Order not found.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Order status updated successfully.",
+      order: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Update order status error:", error);
+
+    res.status(500).json({
+      message: "Order status could not be updated.",
+      error: error.message,
+    });
+  }
+};
+
+const getAllOrders = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `
+      SELECT
+        o.order_id,
+        o.user_id,
+        u.name,
+        u.surname,
+        u.email,
+        o.address_id,
+        a.city,
+        a.district,
+        a.full_address,
+        o.total_amount,
+        o.order_status,
+        o.order_date
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.user_id
+      LEFT JOIN addresses a ON o.address_id = a.address_id
+      ORDER BY o.order_date DESC
+      `
+    );
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Get all orders error:", error);
+
+    res.status(500).json({
+      message: "Orders could not be fetched.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getMyOrders,
   getOrderDetail,
+  getAllOrders,
+  updateOrderStatus,
 };
