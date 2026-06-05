@@ -65,7 +65,7 @@ order_items: Sipariş içindeki ürün detaylarını tutar.
 addresses: Kullanıcılara ait adres bilgilerini tutar.
 shops: Mağazalara ait temel bilgileri tutar.
 
-***************VERİTABANI ER DİYAGRAMI GÖRSELİ****
+![ER Diyagramı](görseller/resim3.png)
 
 8. Tablolar ve İlişkiler
 ***TABLO FOTOSU***
